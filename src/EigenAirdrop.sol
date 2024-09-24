@@ -89,6 +89,7 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
     error NoAirdrop();
     error InvalidAirdrop();
     error DeadlinePassed();
+    error InvalidInit();
 
     /**
      * @dev Modifier to check if the user can claim the specified amount.
@@ -144,6 +145,14 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         strategy = IStrategy(_strategy);
         strategyManager = IStrategyManager(_strategyManager);
         _updateUserAmounts(_userAmounts);
+        
+        if(deadline == 0 ||
+         safe == address(0) ||
+         address(token) == address(0) ||
+         address(strategy) == address(0) ||
+         address(strategyManager) == address(0)){
+            revert InvalidInit();
+        }
     }
 
     /**
@@ -176,6 +185,10 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
      */
     function _updateUserAmounts(UserAmount[] memory _userAmounts) internal {
         for (uint256 i; i < _userAmounts.length; i++) {
+            if(amounts[_userAmounts[i].user] != 0){
+                totalAmount -= amounts[_userAmounts[i].user];
+            }
+
             totalAmount += _userAmounts[i].amount;
             amounts[_userAmounts[i].user] += _userAmounts[i].amount;
         }

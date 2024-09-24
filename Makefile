@@ -52,3 +52,7 @@ lint:
 format:
 	forge fmt --root .
 
+
+convert:
+	./script/eigenAmounts/convertCSVjson.sh ${path}
+
