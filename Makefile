@@ -50,5 +50,5 @@ lint:
 # Format the Solidity files using forge fmt
 .PHONY: format
 format:
-	forge fmt
+	forge fmt --root .
 
