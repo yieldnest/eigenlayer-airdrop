@@ -37,7 +37,7 @@ contract EigenAirdrop {
     }
 
     function claim() external returns (uint256 _amountClaimed) {
-        require(!airdropClaimed[msg.sender], "Ardrop already claimed.");
+        require(!airdropClaimed[msg.sender], "Airdrop already claimed.");
         _amountClaimed = eigenAmounts[msg.sender] * tokensPerPoint;
         _rewardToken.transferFrom(multiSig, msg.sender, _amountClaimed);
         airdropClaimed[msg.sender] = true;
