@@ -7,7 +7,11 @@ import { BaseTest } from "./BaseTest.t.sol";
 import { TransparentUpgradeableProxy } from
     "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import { Vm } from "forge-std/Vm.sol";
+
+import { Deposit, SigUtils } from "./utils/SigUtils.sol";
 
 contract EigenAirdropTest is BaseTest {
     EigenAirdrop public airdrop;
@@ -41,17 +45,12 @@ contract EigenAirdropTest is BaseTest {
             userAmounts
         );
 
-        proxy = new TransparentUpgradeableProxy(
-            address(airdropImplementation),
-            proxyAdmin,
-            initParams
-        );
+        proxy = new TransparentUpgradeableProxy(address(airdropImplementation), proxyAdmin, initParams);
 
         airdrop = EigenAirdrop(address(proxy));
 
         vm.prank(YNSAFE);
         EIGEN.approve(address(airdrop), INITIAL_BALANCE);
-
     }
 
     function testDefaults() public {
@@ -72,11 +71,60 @@ contract EigenAirdropTest is BaseTest {
         vm.prank(staker);
         airdrop.claim(amount);
         assertEq(EIGEN.balanceOf(staker), amount);
+
+        assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount, "YNSAFE Balance");
     }
 
-    function testClaimWithPermit() public {
+    function testClaimThenStake() public {
+        uint256 sharesBefore = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
+
         vm.prank(staker);
-        // airdrop.claimWithPermit(amount, 0, 0, bytes32(0), bytes32(0));
-        // assertEq(EIGEN.balanceOf(staker), amount);
+        airdrop.claim(amount);
+        assertEq(EIGEN.balanceOf(staker), amount);
+
+        assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount, "YNSAFE Balance");
+
+        vm.prank(staker);
+        EIGEN.approve(address(STRATEGY_MANAGER), amount);
+
+        vm.prank(staker);
+        uint256 shares = STRATEGY_MANAGER.depositIntoStrategy(STRATEGY, IERC20(address(EIGEN)), amount);
+
+        assertEq(EIGEN.balanceOf(staker), 0, "User Balance");
+        assertEq(shares, amount, "Shares");
+
+        uint256 sharesAfter = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
+        assertEq(sharesAfter, sharesBefore + shares, "Shares After");
     }
+
+    // NOTE: this fails at
+    // https://github.com/Layr-Labs/eigenlayer-contracts/blob/dev/src/contracts/core/StrategyManager.sol#L141
+    // function testClaimAndRestakeWithSignature() public {
+    //     uint256 sharesBefore = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
+    //
+    //     Deposit memory deposit = Deposit({
+    //         staker: staker,
+    //         strategy: address(STRATEGY),
+    //         token: address(EIGEN),
+    //         amount: amount,
+    //         nonce: STRATEGY_MANAGER.nonces(staker),
+    //         expiry: block.timestamp + 1 days
+    //     });
+    //
+    //     bytes32 digest = SigUtils.getDepositDigest(address(STRATEGY_MANAGER), deposit);
+    //
+    //     (uint8 v, bytes32 r, bytes32 s) = vm.sign(stakerWallet, digest);
+    //     bytes memory signature = abi.encodePacked(r, s, v);
+    //
+    //     vm.prank(staker);
+    //     uint256 shares = airdrop.claimAndRestakeWithSignature(amount, deposit.expiry, signature);
+    //
+    //     assertEq(EIGEN.balanceOf(staker), 0, "User Balance");
+    //     assertEq(shares, amount, "Shares");
+    //
+    //     uint256 sharesAfter = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
+    //     assertEq(sharesAfter, sharesBefore + shares, "Shares After");
+    //
+    //     assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount, "YNSAFE Balance");
+    // }
 }

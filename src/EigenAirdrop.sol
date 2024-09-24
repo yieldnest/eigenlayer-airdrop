@@ -5,7 +5,6 @@ import { OwnableUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/access/Owna
 import { PausableUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/utils/PausableUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/utils/ReentrancyGuardUpgradeable.sol";
 import { IERC20 } from "@openzeppelin-v5.0.2/token/ERC20/IERC20.sol";
-import { IERC20Permit } from "@openzeppelin-v5.0.2/token/ERC20/extensions/IERC20Permit.sol";
 import { SafeERC20 } from "@openzeppelin-v5.0.2/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin-v5.0.2/utils/math/Math.sol";
 
@@ -32,23 +31,6 @@ interface IEigenAirdrop {
     function claim(uint256 _amountToClaim) external;
 
     /**
-     * @notice Claim tokens from the airdrop using a permit for gasless approval.
-     * @param _amountToClaim Amount of tokens to claim.
-     * @param _deadline The deadline by which the permit must be executed.
-     * @param _v V parameter of the ECDSA signature.
-     * @param _r R parameter of the ECDSA signature.
-     * @param _s S parameter of the ECDSA signature.
-     */
-    function claimWithPermit(
-        uint256 _amountToClaim,
-        uint256 _deadline,
-        uint8 _v,
-        bytes32 _r,
-        bytes32 _s
-    )
-        external;
-
-    /**
      * @notice Claim tokens from the airdrop and restake them using a signature.
      * @param _amountToClaim Amount of tokens to claim.
      * @param expiry The expiry time of the signature.
@@ -59,7 +41,8 @@ interface IEigenAirdrop {
         uint256 expiry,
         bytes calldata signature
     )
-        external;
+        external
+        returns (uint256);
 }
 
 /**
@@ -96,7 +79,8 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
     /// @notice Emitted when a user claims and restakes tokens.
     /// @param user The address of the user.
     /// @param amount The amount of tokens restaked.
-    event ClaimedAndRestaked(address user, uint256 amount);
+    /// @param shares The amount of shares received from restaking.
+    event ClaimedAndRestaked(address user, uint256 amount, uint256 shares);
 
     /// @notice Error thrown when there is no airdrop available.
     error NoAirdrop();
@@ -193,55 +177,18 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         }
     }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    function claim() external returns (uint256 _amountClaimed) {
-        require(!airdropClaimed[msg.sender], "Airdrop already claimed.");
-        _amountClaimed = eigenAmounts[msg.sender] * tokensPerPoint;
-        _rewardToken.transferFrom(multiSig, msg.sender, _amountClaimed);
-        airdropClaimed[msg.sender] = true;
-        emit AirdropClaimed(msg.sender, _amountClaimed);
-=======
-=======
     /**
      * @notice Claims the specified amount of tokens from the airdrop.
      * @param _amountToClaim The amount of tokens to claim.
      */
->>>>>>> ed927ed (added SigUtils)
-    function claim(uint256 _amountToClaim) external virtual override nonReentrant whenNotPaused {
-        _claim(_amountToClaim);
-    }
-
-    /**
-     * @notice Claims the specified amount of tokens from the airdrop using a permit for gasless approval.
-     * @param _amountToClaim The amount of tokens to claim.
-     * @param _deadline The deadline by which the permit must be executed.
-     * @param _v V parameter of the ECDSA signature.
-     * @param _r R parameter of the ECDSA signature.
-     * @param _s S parameter of the ECDSA signature.
-     */
-    function claimWithPermit(
-        uint256 _amountToClaim,
-        uint256 _deadline,
-        uint8 _v,
-        bytes32 _r,
-        bytes32 _s
-    )
+    function claim(uint256 _amountToClaim)
         external
         virtual
         override
         nonReentrant
         whenNotPaused
+        whenAvailable(_amountToClaim)
     {
-        IERC20Permit(address(token)).permit(msg.sender, address(this), _amountToClaim, _deadline, _v, _r, _s);
-        _claim(_amountToClaim);
-    }
-
-    /**
-     * @dev Internal function to handle the token claim process.
-     * @param _amountToClaim The amount of tokens to claim.
-     */
-    function _claim(uint256 _amountToClaim) internal whenAvailable(_amountToClaim) {
         token.safeTransferFrom(safe, msg.sender, _amountToClaim);
         emit Claimed(msg.sender, _amountToClaim);
     }
@@ -262,33 +209,14 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         override
         nonReentrant
         whenNotPaused
-    {
-        _claimAndRestakeWithSignature(_amountToClaim, _expiry, signature);
-    }
-
-    /**
-     * @dev Internal function to handle the claim and restaking process.
-     * @param _amountToClaim The amount of tokens to claim.
-     * @param _expiry The expiry time of the signature.
-     * @param signature The user's signature authorizing the restaking.
-     */
-    function _claimAndRestakeWithSignature(
-        uint256 _amountToClaim,
-        uint256 _expiry,
-        bytes calldata signature
-    )
-        internal
         whenAvailable(_amountToClaim)
+        returns (uint256 shares)
     {
         token.safeTransferFrom(safe, address(this), _amountToClaim);
-        strategyManager.depositIntoStrategyWithSignature(
+        token.approve(address(strategyManager), _amountToClaim);
+        shares = strategyManager.depositIntoStrategyWithSignature(
             strategy, IStrategyToken(address(token)), _amountToClaim, msg.sender, _expiry, signature
         );
-<<<<<<< HEAD
-        emit AirdropClaimedAndRestaked(msg.sender, _amountToClaim);
->>>>>>> 63e538f (added claimAndRestake)
-=======
-        emit ClaimedAndRestaked(msg.sender, _amountToClaim);
->>>>>>> ed927ed (added SigUtils)
+        emit ClaimedAndRestaked(msg.sender, _amountToClaim, shares);
     }
 }
