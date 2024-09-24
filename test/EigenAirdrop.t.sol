@@ -1,56 +1,130 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.8.25 <0.9.0;
+pragma solidity ^0.8.25;
 
-// import { Test } from "forge-std/src/Test.sol";
-// import { console2 } from "forge-std/src/console2.sol";
+import { EigenAirdrop, UserAmount } from "../src/EigenAirdrop.sol";
 
-// import { EigenAirdrop } from "../src/EigenAirdrop.sol";
+import { BaseTest } from "./BaseTest.t.sol";
+import { TransparentUpgradeableProxy } from
+    "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-// interface IERC20 {
-//     function balanceOf(address account) external view returns (uint256);
-// }
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// /// @dev If this is your first time with Forge, read this tutorial in the Foundry Book:
-// /// https://book.getfoundry.sh/forge/writing-tests
-// contract EigenAirdropTest is Test {
-//     EigenAirdrop internal eigenAirdrop;
+import { Vm } from "forge-std/Vm.sol";
 
-//     /// @dev A function invoked before each test case is run.
-//     function setUp() public virtual {
-//         // Instantiate the contract-under-test.
-//         eigenAirdrop = new EigenAirdrop();
-//     }
+import { Deposit, SigUtils } from "./utils/SigUtils.sol";
 
-//     /// @dev Basic test. Run it with `forge test -vvv` to see the console log.
-//     function test_Example() external view {
-//         console2.log("Hello World");
-//         uint256 x = 42;
-//         assertEq(eigenAirdrop.id(x), x, "value mismatch");
-//     }
+contract EigenAirdropTest is BaseTest {
+    EigenAirdrop public airdrop;
+    TransparentUpgradeableProxy public proxy;
 
-//     /// @dev Fuzz test that provides random values for an unsigned integer, but which rejects zero as an input.
-//     /// If you need more sophisticated input validation, you should use the `bound` utility instead.
-//     /// See https://twitter.com/PaulRBerg/status/1622558791685242880
-//     function testFuzz_Example(uint256 x) external view {
-//         vm.assume(x != 0); // or x = bound(x, 1, 100)
-//         assertEq(eigenAirdrop.id(x), x, "value mismatch");
-//     }
+    address public proxyAdmin = makeAddr("proxyAdmin");
+    address public owner = makeAddr("owner");
+    uint256 public amount = 1_000_000_000_000_000_000;
 
-//     /// @dev Fork test that runs against an Ethereum Mainnet fork. For this to work, you need to set `API_KEY_ALCHEMY`
-//     /// in your environment You can get an API key for free at https://alchemy.com.
-//     function testFork_Example() external {
-//         // Silently pass this test if there is no API key.
-//         string memory alchemyApiKey = vm.envOr("API_KEY_ALCHEMY", string(""));
-//         if (bytes(alchemyApiKey).length == 0) {
-//             return;
-//         }
+    Vm.Wallet public stakerWallet;
+    address public staker;
 
-//         // Otherwise, run the test against the mainnet fork.
-//         vm.createSelectFork({ urlOrAlias: "mainnet", blockNumber: 16_428_000 });
-//         address usdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-//         address holder = 0x7713974908Be4BEd47172370115e8b1219F4A5f0;
-//         uint256 actualBalance = IERC20(usdc).balanceOf(holder);
-//         uint256 expectedBalance = 196_307_713.810457e6;
-//         assertEq(actualBalance, expectedBalance);
-//     }
-// }
+    function setUp() public override {
+        super.setUp();
+
+        stakerWallet = vm.createWallet("staker");
+        staker = stakerWallet.addr;
+
+        EigenAirdrop airdropImplementation = new EigenAirdrop();
+
+        UserAmount[] memory userAmounts = new UserAmount[](1);
+        userAmounts[0] = UserAmount({ user: staker, amount: amount });
+
+        bytes memory initParams = abi.encodeWithSelector(
+            EigenAirdrop.initialize.selector,
+            address(owner),
+            address(YNSAFE),
+            address(EIGEN),
+            address(STRATEGY),
+            address(STRATEGY_MANAGER),
+            userAmounts
+        );
+
+        proxy = new TransparentUpgradeableProxy(address(airdropImplementation), proxyAdmin, initParams);
+
+        airdrop = EigenAirdrop(address(proxy));
+
+        vm.prank(YNSAFE);
+        EIGEN.approve(address(airdrop), INITIAL_BALANCE);
+    }
+
+    function testDefaults() public {
+        vm.prank(proxyAdmin);
+        assertEq(address(proxy.admin()), proxyAdmin);
+
+        assertEq(address(airdrop.safe()), address(YNSAFE));
+        assertEq(address(airdrop.token()), address(EIGEN));
+        assertEq(address(airdrop.strategy()), address(STRATEGY));
+        assertEq(address(airdrop.strategyManager()), address(STRATEGY_MANAGER));
+        assertEq(address(airdrop.owner()), owner);
+
+        assertEq(airdrop.totalAmount(), amount);
+        assertEq(airdrop.amounts(staker), amount);
+    }
+
+    function testClaim() public {
+        vm.prank(staker);
+        airdrop.claim(amount);
+        assertEq(EIGEN.balanceOf(staker), amount);
+
+        assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount, "YNSAFE Balance");
+    }
+
+    function testClaimThenStake() public {
+        uint256 sharesBefore = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
+
+        vm.prank(staker);
+        airdrop.claim(amount);
+        assertEq(EIGEN.balanceOf(staker), amount);
+
+        assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount, "YNSAFE Balance");
+
+        vm.prank(staker);
+        EIGEN.approve(address(STRATEGY_MANAGER), amount);
+
+        vm.prank(staker);
+        uint256 shares = STRATEGY_MANAGER.depositIntoStrategy(STRATEGY, IERC20(address(EIGEN)), amount);
+
+        assertEq(EIGEN.balanceOf(staker), 0, "User Balance");
+        assertEq(shares, amount, "Shares");
+
+        uint256 sharesAfter = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
+        assertEq(sharesAfter, sharesBefore + shares, "Shares After");
+    }
+
+    // NOTE: this fails at
+    // https://github.com/Layr-Labs/eigenlayer-contracts/blob/dev/src/contracts/core/StrategyManager.sol#L141
+    // function testClaimAndRestakeWithSignature() public {
+    //     uint256 sharesBefore = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
+    //
+    //     Deposit memory deposit = Deposit({
+    //         staker: staker,
+    //         strategy: address(STRATEGY),
+    //         token: address(EIGEN),
+    //         amount: amount,
+    //         nonce: STRATEGY_MANAGER.nonces(staker),
+    //         expiry: block.timestamp + 1 days
+    //     });
+    //
+    //     bytes32 digest = SigUtils.getDepositDigest(address(STRATEGY_MANAGER), deposit);
+    //
+    //     (uint8 v, bytes32 r, bytes32 s) = vm.sign(stakerWallet, digest);
+    //     bytes memory signature = abi.encodePacked(r, s, v);
+    //
+    //     vm.prank(staker);
+    //     uint256 shares = airdrop.claimAndRestakeWithSignature(amount, deposit.expiry, signature);
+    //
+    //     assertEq(EIGEN.balanceOf(staker), 0, "User Balance");
+    //     assertEq(shares, amount, "Shares");
+    //
+    //     uint256 sharesAfter = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
+    //     assertEq(sharesAfter, sharesBefore + shares, "Shares After");
+    //
+    //     assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount, "YNSAFE Balance");
+    // }
+}

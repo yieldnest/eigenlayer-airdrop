@@ -18,17 +18,20 @@ jobs:
       - name: "Check out the repo"
         uses: "actions/checkout@v4"
 
+      - name: "Setup node"
+        uses: actions/setup-node@v4
+
       - name: "Install Foundry"
         uses: "foundry-rs/foundry-toolchain@v1"
 
-      - name: "Install Bun"
-        uses: "oven-sh/setup-bun@v1"
+      - name: "Install the dependencies"
+        run: "forge install"
 
-      - name: "Install the Node.js dependencies"
-        run: "bun install"
+      - name: "Install solhint"
+        run: "npm install -g solhint"
 
       - name: "Lint the code"
-        run: "bun run lint"
+        run: "forge fmt --check && solhint \"{script,src,test}/**/*.sol\""
 
       - name: "Add lint summary"
         run: |
@@ -44,11 +47,8 @@ jobs:
       - name: "Install Foundry"
         uses: "foundry-rs/foundry-toolchain@v1"
 
-      - name: "Install Bun"
-        uses: "oven-sh/setup-bun@v1"
-
-      - name: "Install the Node.js dependencies"
-        run: "bun install"
+      - name: "Install the dependencies"
+        run: "forge install"
 
       - name: "Build the contracts and print their size"
         run: "forge build --sizes"
@@ -68,11 +68,8 @@ jobs:
       - name: "Install Foundry"
         uses: "foundry-rs/foundry-toolchain@v1"
 
-      - name: "Install Bun"
-        uses: "oven-sh/setup-bun@v1"
-
-      - name: "Install the Node.js dependencies"
-        run: "bun install"
+      - name: "Install the dependencies"
+        run: "forge install"
 
       - name: "Show the Foundry config"
         run: "forge config"
@@ -84,7 +81,10 @@ jobs:
           )" >> $GITHUB_ENV
 
       - name: "Run the tests"
-        run: "forge test"
+        env:
+          CI: true
+          API_KEY_ALCHEMY: ${{ secrets.API_KEY_ALCHEMY }}
+        run: "forge test -vvv"
 
       - name: "Add test summary"
         run: |
