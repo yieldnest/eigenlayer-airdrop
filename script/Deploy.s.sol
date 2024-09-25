@@ -30,7 +30,6 @@ contract DeployEigenAirdrop is BaseScript {
             tempUserAmount.amount = tempEigenAmount.points * tokensPerPoint;
             userAmounts.push(tempUserAmount);
         } 
-
     }
 
     function run(string memory _path) public returns (EigenAirdrop eigenAirdrop) {
