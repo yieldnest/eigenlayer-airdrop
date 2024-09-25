@@ -31,6 +31,27 @@ interface IEigenAirdrop {
     function claim(uint256 _amountToClaim) external;
 
     /**
+     * @notice Initializes the airdrop contract with the provided parameters.
+     * @param _owner The address of the owner.
+     * @param _safe The address of the safe holding the tokens.
+     * @param _token The address of the token being airdropped.
+     * @param _strategy The address of the strategy for restaking.
+     * @param _strategyManager The address of the strategy manager.
+     * @param _deadline The timestamp on which the claims are no longer valid.
+     * @param _userAmounts An array of user amounts for the airdrop.
+     */
+    function initialize(
+        address _owner,
+        address _safe,
+        address _token,
+        address _strategy,
+        address _strategyManager,
+        uint256 _deadline,
+        UserAmount[] memory _userAmounts
+    )
+        external;
+
+    /**
      * @notice Claim tokens from the airdrop and restake them using a signature.
      * @param _amountToClaim Amount of tokens to claim.
      * @param expiry The expiry time of the signature.
@@ -59,6 +80,9 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
     /// @notice The total amount of tokens available for the airdrop.
     uint256 public totalAmount;
 
+    /// @notice the timestamp on which the claims are no longer valid
+    uint256 public deadline;
+
     /// @notice Address of the safe that holds the tokens.
     address public safe;
 
@@ -85,6 +109,8 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
     /// @notice Error thrown when there is no airdrop available.
     error NoAirdrop();
     error InvalidAirdrop();
+    error DeadlinePassed();
+    error InvalidInit();
 
     /**
      * @dev Modifier to check if the user can claim the specified amount.
@@ -92,6 +118,9 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
      * @param _amountToClaim The amount the user is trying to claim.
      */
     modifier whenAvailable(uint256 _amountToClaim) {
+        if (block.timestamp > deadline) {
+            revert DeadlinePassed();
+        }
         if (_amountToClaim == 0 || _amountToClaim > amounts[msg.sender]) {
             revert NoAirdrop();
         }
@@ -114,7 +143,8 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
      * @param _token The address of the token being airdropped.
      * @param _strategy The address of the strategy for restaking.
      * @param _strategyManager The address of the strategy manager.
-     * @param _userAmounts An array of user amount for token distribution.
+     * @param _deadline The timestamp on which the claims are no longer valid.
+     * @param _userAmounts An array of user amounts for the airdrop.
      */
     function initialize(
         address _owner,
@@ -122,6 +152,7 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         address _token,
         address _strategy,
         address _strategyManager,
+        uint256 _deadline,
         UserAmount[] memory _userAmounts
     )
         public
@@ -130,10 +161,20 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         __Pausable_init();
         __Ownable_init(_owner);
         __ReentrancyGuard_init();
+
+        if (
+            _safe == address(0) || _token == address(0) || _strategy == address(0)
+                || _strategyManager == address(0) || _deadline == 0
+        ) {
+            revert InvalidInit();
+        }
+
         safe = _safe;
+        deadline = _deadline;
         token = IERC20(_token);
         strategy = IStrategy(_strategy);
         strategyManager = IStrategyManager(_strategyManager);
+
         _updateUserAmounts(_userAmounts);
     }
 
@@ -167,8 +208,11 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
      */
     function _updateUserAmounts(UserAmount[] memory _userAmounts) internal {
         for (uint256 i; i < _userAmounts.length; i++) {
+            if (amounts[_userAmounts[i].user] > 0) {
+                totalAmount -= amounts[_userAmounts[i].user];
+            }
             totalAmount += _userAmounts[i].amount;
-            amounts[_userAmounts[i].user] += _userAmounts[i].amount;
+            amounts[_userAmounts[i].user] = _userAmounts[i].amount;
         }
 
         uint256 safeBalance = token.balanceOf(safe);

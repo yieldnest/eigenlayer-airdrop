@@ -7,7 +7,7 @@ import { Eigen } from "eigenlayer-contracts/token/Eigen.sol";
 import { Test } from "forge-std/Test.sol";
 
 contract BaseTest is Test {
-    error AlchemyAPIKeyNotSet();
+    error RPCNotSet();
 
     Eigen internal constant EIGEN = Eigen(0xec53bF9167f50cDEB3Ae105f56099aaaB9061F83);
     address internal constant YNSAFE = 0xCCB2FEB7d8e081dcedFe1CFbefC9d46Eb383E389;
@@ -18,9 +18,9 @@ contract BaseTest is Test {
     uint256 internal constant INITIAL_BALANCE = 124_459_120_634_647_860_000_000;
 
     function setUp() public virtual {
-        string memory alchemyApiKey = vm.envOr("API_KEY_ALCHEMY", string(""));
-        if (bytes(alchemyApiKey).length == 0) {
-            revert AlchemyAPIKeyNotSet();
+        string memory rpc = vm.envOr("MAINNET_RPC_URL", string(""));
+        if (bytes(rpc).length == 0) {
+            revert RPCNotSet();
         }
 
         vm.createSelectFork({ urlOrAlias: "mainnet", blockNumber: 20_817_714 });

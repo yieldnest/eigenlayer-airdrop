@@ -31,7 +31,7 @@ jobs:
         run: "npm install -g solhint"
 
       - name: "Lint the code"
-        run: "forge fmt --check && solhint \"{script,src,test}/**/*.sol\""
+        run: 'forge fmt --check && solhint "{script,src,test}/**/*.sol"'
 
       - name: "Add lint summary"
         run: |
@@ -83,7 +83,7 @@ jobs:
       - name: "Run the tests"
         env:
           CI: true
-          API_KEY_ALCHEMY: ${{ secrets.API_KEY_ALCHEMY }}
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
         run: "forge test -vvv"
 
       - name: "Add test summary"
