@@ -35,10 +35,11 @@ contract DeployEigenAirdrop is BaseScript {
     function run(string memory _path) public returns (EigenAirdrop eigenAirdrop) {
         _loadEigenAmounts(_path);
         _getUserAmounts();
+        require(userAmounts.length > 0);
+        vm.startBroadcast();
+
         eigenAirdrop = new EigenAirdrop();
 
-        require(userAmounts.length > 0);
-        //  UserAmount[] memory _userAmounts = userAmounts;
         IEigenAirdrop(address(eigenAirdrop)).initialize(        
         msg.sender,
         airdropAddresses.REWARDS_MULTISIG,
@@ -47,5 +48,6 @@ contract DeployEigenAirdrop is BaseScript {
         airdropAddresses.STRATEGY_MANAGER_ADDRESS,
         airdropDeadline,
         userAmounts);
+        vm.stopBroadcast();
     }
 }
