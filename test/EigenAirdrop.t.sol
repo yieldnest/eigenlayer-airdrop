@@ -71,6 +71,7 @@ contract EigenAirdropTest is BaseTest {
         assertEq(address(airdrop.strategyManager()), address(STRATEGY_MANAGER));
         assertEq(address(airdrop.owner()), owner);
         assertEq(airdrop.deadline(), deadline);
+        assertEq(airdrop.paused(), false);
 
         assertEq(airdrop.totalAmount(), amount);
         assertEq(airdrop.amounts(staker), amount);
@@ -234,4 +235,5 @@ contract EigenAirdropTest is BaseTest {
         assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE, "YNSAFE Balance");
     }
 
+    // TODO: add tests for updateUserAmounts
 }
