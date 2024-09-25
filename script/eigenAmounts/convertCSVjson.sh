@@ -32,14 +32,14 @@ jq -R -s -c '
     }
     else
     {
-      "address": .[0], 
+      "addr": .[0], 
       "points": .[1],
       "percentage": .[2] | rtrimstr("\r")
     }
     end
     end
 
-    | select(.["address"] != "" and .["points"] != "" and .["percentage"] != "")
+    | select(.["addr"] != "" and .["points"] != "" and .["percentage"] != "")
     
   ) 
   

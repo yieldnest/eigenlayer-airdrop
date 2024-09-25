@@ -30,6 +30,16 @@ interface IEigenAirdrop {
      */
     function claim(uint256 _amountToClaim) external;
 
+    function initialize(
+        address _owner,
+        address _safe,
+        address _token,
+        address _strategy,
+        address _strategyManager,
+        uint256 _deadline,
+        UserAmount[] memory _userAmounts
+    ) external;
+
     /**
      * @notice Claim tokens from the airdrop and restake them using a signature.
      * @param _amountToClaim Amount of tokens to claim.
