@@ -30,6 +30,16 @@ interface IEigenAirdrop {
      */
     function claim(uint256 _amountToClaim) external;
 
+    /**
+     * @notice Initializes the airdrop contract with the provided parameters.
+     * @param _owner The address of the owner.
+     * @param _safe The address of the safe holding the tokens.
+     * @param _token The address of the token being airdropped.
+     * @param _strategy The address of the strategy for restaking.
+     * @param _strategyManager The address of the strategy manager.
+     * @param _deadline The timestamp on which the claims are no longer valid.
+     * @param _userAmounts An array of user amounts for the airdrop.
+     */
     function initialize(
         address _owner,
         address _safe,
@@ -133,7 +143,8 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
      * @param _token The address of the token being airdropped.
      * @param _strategy The address of the strategy for restaking.
      * @param _strategyManager The address of the strategy manager.
-     * @param _userAmounts An array of user amount for token distribution.
+     * @param _deadline The timestamp on which the claims are no longer valid.
+     * @param _userAmounts An array of user amounts for the airdrop.
      */
     function initialize(
         address _owner,
@@ -150,19 +161,21 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         __Pausable_init();
         __Ownable_init(_owner);
         __ReentrancyGuard_init();
+
+        if (
+            _safe == address(0) || _token == address(0) || _strategy == address(0)
+                || _strategyManager == address(0) || _deadline == 0
+        ) {
+            revert InvalidInit();
+        }
+
         safe = _safe;
         deadline = _deadline;
         token = IERC20(_token);
         strategy = IStrategy(_strategy);
         strategyManager = IStrategyManager(_strategyManager);
-        _updateUserAmounts(_userAmounts);
 
-        if (
-            deadline == 0 || safe == address(0) || address(token) == address(0) || address(strategy) == address(0)
-                || address(strategyManager) == address(0)
-        ) {
-            revert InvalidInit();
-        }
+        _updateUserAmounts(_userAmounts);
     }
 
     /**
@@ -195,12 +208,11 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
      */
     function _updateUserAmounts(UserAmount[] memory _userAmounts) internal {
         for (uint256 i; i < _userAmounts.length; i++) {
-            if (amounts[_userAmounts[i].user] != 0) {
+            if (amounts[_userAmounts[i].user] > 0) {
                 totalAmount -= amounts[_userAmounts[i].user];
             }
-
             totalAmount += _userAmounts[i].amount;
-            amounts[_userAmounts[i].user] += _userAmounts[i].amount;
+            amounts[_userAmounts[i].user] = _userAmounts[i].amount;
         }
 
         uint256 safeBalance = token.balanceOf(safe);

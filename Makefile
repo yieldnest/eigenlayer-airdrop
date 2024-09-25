@@ -53,7 +53,15 @@ format:
 	forge fmt --root .
 
 
-# make convert path=script/eigenAmounts/eigen-points-result-ynETH.csv    
+# make convert csv=script/input/ynETH.csv
+csv ?= script/inputs/ynETH.csv
+.PHONY: convert
 convert:
-	./script/eigenAmounts/convertCSVjson.sh ${path}
+	bash ./script/bash/convertCSVjson.sh ${csv}
 
+# make deploy json=script/inputs/ynETH.json network=mainnet
+json ?= script/inputs/ynETH.json
+network ?= mainnet
+.PHONY: deploy
+deploy:
+	forge script DeployEigenAirdrop --rpc-url ${network} --sig "run(string memory)" ${json}

@@ -18,7 +18,7 @@ contract BaseTest is Test {
     uint256 internal constant INITIAL_BALANCE = 124_459_120_634_647_860_000_000;
 
     function setUp() public virtual {
-        string memory alchemyApiKey = vm.envOr("API_KEY_ALCHEMY", string(""));
+        string memory alchemyApiKey = vm.envOr("MAINNET_RPC_URL", string(""));
         if (bytes(alchemyApiKey).length == 0) {
             revert AlchemyAPIKeyNotSet();
         }

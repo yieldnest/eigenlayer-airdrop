@@ -24,15 +24,15 @@ jq -R -s -c '
     if .[0] == "Total ynETH Holder Eigen Points" then
       {
         "Total ynETH Holder Eigen Points": .[1],
-        
+
       }
-    else if .[0] == "Total Eigen Points to Aug 15th" then 
+    else if .[0] == "Total Eigen Points to Aug 15th" then
     {
         "Total Eigen Points to Aug 15th": .[1],
     }
     else
     {
-      "addr": .[0], 
+      "addr": .[0],
       "points": .[1],
       "percentage": .[2] | rtrimstr("\r")
     }
@@ -40,9 +40,20 @@ jq -R -s -c '
     end
 
     | select(.["addr"] != "" and .["points"] != "" and .["percentage"] != "")
-    
-  ) 
-  
-' "$csv_file" >"${csv_file%.csv}.json"
+
+  )
+
+' "$csv_file" | jq '{
+  eigenPoints: [
+    .[] | select(.addr != null)
+  ],
+  totalYnETHHolderEigenPoints: (.[] | select(has("Total ynETH Holder Eigen Points"))."Total ynETH Holder Eigen Points"),
+  totalEigenPointsToAug15th: (.[] | select(has("Total Eigen Points to Aug 15th"))."Total Eigen Points to Aug 15th")
+}' | jq '
+  del(.eigenPoints[].percentage)
+  | .eigenPoints[].points |= (tonumber * 100 | floor)
+  | .totalYnETHHolderEigenPoints |= (tonumber * 100 | floor)
+  | .totalEigenPointsToAug15th |= (tonumber * 100 | floor)
+' | jq . | tee "${csv_file%.csv}.json" > /dev/null
 
 echo "Conversion complete. JSON file saved as ${csv_file%.csv}.json"
