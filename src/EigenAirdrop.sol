@@ -30,6 +30,17 @@ interface IEigenAirdrop {
      */
     function claim(uint256 _amountToClaim) external;
 
+    function initialize(
+        address _owner,
+        address _safe,
+        address _token,
+        address _strategy,
+        address _strategyManager,
+        uint256 _deadline,
+        UserAmount[] memory _userAmounts
+    )
+        external;
+
     /**
      * @notice Claim tokens from the airdrop and restake them using a signature.
      * @param _amountToClaim Amount of tokens to claim.
@@ -59,6 +70,9 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
     /// @notice The total amount of tokens available for the airdrop.
     uint256 public totalAmount;
 
+    /// @notice the timestamp on which the claims are no longer valid
+    uint256 public deadline;
+
     /// @notice Address of the safe that holds the tokens.
     address public safe;
 
@@ -85,6 +99,8 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
     /// @notice Error thrown when there is no airdrop available.
     error NoAirdrop();
     error InvalidAirdrop();
+    error DeadlinePassed();
+    error InvalidInit();
 
     /**
      * @dev Modifier to check if the user can claim the specified amount.
@@ -92,6 +108,9 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
      * @param _amountToClaim The amount the user is trying to claim.
      */
     modifier whenAvailable(uint256 _amountToClaim) {
+        if (block.timestamp > deadline) {
+            revert DeadlinePassed();
+        }
         if (_amountToClaim == 0 || _amountToClaim > amounts[msg.sender]) {
             revert NoAirdrop();
         }
@@ -122,6 +141,7 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         address _token,
         address _strategy,
         address _strategyManager,
+        uint256 _deadline,
         UserAmount[] memory _userAmounts
     )
         public
@@ -131,10 +151,18 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         __Ownable_init(_owner);
         __ReentrancyGuard_init();
         safe = _safe;
+        deadline = _deadline;
         token = IERC20(_token);
         strategy = IStrategy(_strategy);
         strategyManager = IStrategyManager(_strategyManager);
         _updateUserAmounts(_userAmounts);
+
+        if (
+            deadline == 0 || safe == address(0) || address(token) == address(0) || address(strategy) == address(0)
+                || address(strategyManager) == address(0)
+        ) {
+            revert InvalidInit();
+        }
     }
 
     /**
@@ -167,6 +195,10 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
      */
     function _updateUserAmounts(UserAmount[] memory _userAmounts) internal {
         for (uint256 i; i < _userAmounts.length; i++) {
+            if (amounts[_userAmounts[i].user] != 0) {
+                totalAmount -= amounts[_userAmounts[i].user];
+            }
+
             totalAmount += _userAmounts[i].amount;
             amounts[_userAmounts[i].user] += _userAmounts[i].amount;
         }

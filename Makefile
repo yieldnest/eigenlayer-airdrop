@@ -52,3 +52,8 @@ lint:
 format:
 	forge fmt --root .
 
+
+# make convert path=script/eigenAmounts/eigen-points-result-ynETH.csv    
+convert:
+	./script/eigenAmounts/convertCSVjson.sh ${path}
+
