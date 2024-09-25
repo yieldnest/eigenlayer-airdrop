@@ -38,7 +38,8 @@ interface IEigenAirdrop {
         address _strategyManager,
         uint256 _deadline,
         UserAmount[] memory _userAmounts
-    ) external;
+    )
+        external;
 
     /**
      * @notice Claim tokens from the airdrop and restake them using a signature.
@@ -107,7 +108,7 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
      * @param _amountToClaim The amount the user is trying to claim.
      */
     modifier whenAvailable(uint256 _amountToClaim) {
-        if(block.timestamp > deadline) {
+        if (block.timestamp > deadline) {
             revert DeadlinePassed();
         }
         if (_amountToClaim == 0 || _amountToClaim > amounts[msg.sender]) {
@@ -155,12 +156,11 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         strategy = IStrategy(_strategy);
         strategyManager = IStrategyManager(_strategyManager);
         _updateUserAmounts(_userAmounts);
-        
-        if(deadline == 0 ||
-         safe == address(0) ||
-         address(token) == address(0) ||
-         address(strategy) == address(0) ||
-         address(strategyManager) == address(0)){
+
+        if (
+            deadline == 0 || safe == address(0) || address(token) == address(0) || address(strategy) == address(0)
+                || address(strategyManager) == address(0)
+        ) {
             revert InvalidInit();
         }
     }
@@ -195,7 +195,7 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
      */
     function _updateUserAmounts(UserAmount[] memory _userAmounts) internal {
         for (uint256 i; i < _userAmounts.length; i++) {
-            if(amounts[_userAmounts[i].user] != 0){
+            if (amounts[_userAmounts[i].user] != 0) {
                 totalAmount -= amounts[_userAmounts[i].user];
             }
 

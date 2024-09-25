@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.25 <0.9.0;
 
+import { BaseData } from "./BaseData.s.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {BaseData} from "./BaseData.s.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-    struct EigenAmounts {
+struct EigenAmounts {
     address addr;
     string percentage;
     uint256 points;
@@ -21,8 +20,8 @@ contract BaseScript is BaseData {
     EigenAmounts[] public eigenAmounts;
 
     uint256 public multisigBalance;
-    
-    constructor () {
+
+    constructor() {
         require(baseData.isSupportedChainId(block.chainid));
         airdropAddresses = baseData.getAddresses(uint256(block.chainid));
         multisigBalance = IERC20(airdropAddresses.EIGEN_TOKEN).balanceOf(airdropAddresses.REWARDS_MULTISIG);
@@ -39,14 +38,14 @@ contract BaseScript is BaseData {
         this.loadEigenAmounts(_eigenAmounts);
     }
 
-
     /**
-     * @dev this function is required to load the JSON input struct into storage untill that feature is added to foundry
+     * @dev this function is required to load the JSON input struct into storage until that feature is added to
+     * foundry
      */
     function loadEigenAmounts(EigenAmounts[] calldata _eigenAmounts) external {
-        for(uint256 i; i< _eigenAmounts.length; i++){
+        delete eigenAmounts;
+        for (uint256 i; i < _eigenAmounts.length; i++) {
             eigenAmounts.push(_eigenAmounts[i]);
-        } 
+        }
     }
-
 }
