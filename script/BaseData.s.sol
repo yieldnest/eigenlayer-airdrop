@@ -16,12 +16,12 @@ contract BaseData is Script {
 
     struct ChainIds {
         uint256 mainnet;
-        uint256 holeksy;
+        uint256 anvil;
     }
 
     mapping(uint256 chainId => Data data) private __data;
 
-    ChainIds public chainIds = ChainIds({ mainnet: 1, holeksy: 17_000 });
+    ChainIds public chainIds = ChainIds({ mainnet: 1, anvil: 31337 });
 
     address private TEMP_AIRDROP_OWNER;
     address private TEMP_PROXY_CONTROLLER;
@@ -46,6 +46,6 @@ contract BaseData is Script {
     }
 
     function isSupportedChainId(uint256 chainId) internal view returns (bool) {
-        return chainId == chainIds.mainnet || chainId == chainIds.holeksy;
+        return chainId == chainIds.mainnet ||  chainId == chainIds.anvil;
     }
 }
