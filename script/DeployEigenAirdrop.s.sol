@@ -89,11 +89,6 @@ contract DeployEigenAirdrop is BaseScript {
         eigenAirdrop = EigenAirdrop(address(proxy));
 
         console.log("Deployed EigenAirdrop at address: ", address(eigenAirdrop));
-        console.log(eigenAirdrop.totalAmount(), totalAmounts);
-        console.log(eigenAirdrop.deadline(), airdropDeadline);
-        console.log(eigenAirdrop.owner(), data.airdropOwner);
-        console.log(eigenAirdrop.safe() , data.rewardsSafe);
-        console.log(address(eigenAirdrop.token()) , data.eigenToken);
     }
 
     function _verify() internal view {
