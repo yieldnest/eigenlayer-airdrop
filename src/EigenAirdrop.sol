@@ -203,10 +203,11 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
     }
     /**
      * @notice Updates the claim deadline
-     @param _newDeadline the timestamp of the new claim deadline
+     *  @param _newDeadline the timestamp of the new claim deadline
      */
+
     function setDeadline(uint256 _newDeadline) external onlyOwner {
-          deadline = _newDeadline;
+        deadline = _newDeadline;
     }
 
     /**

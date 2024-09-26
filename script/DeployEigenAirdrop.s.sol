@@ -6,8 +6,7 @@ import { EigenAirdrop, IEigenAirdrop, UserAmount } from "../src/EigenAirdrop.sol
 import { BaseScript } from "./BaseScript.s.sol";
 import { TransparentUpgradeableProxy } from
     "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import { Strings } from
-    "@openzeppelin/contracts/utils/Strings.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { console } from "forge-std/console.sol";
@@ -15,7 +14,6 @@ import { console } from "forge-std/console.sol";
 contract DeployEigenAirdrop is BaseScript {
     uint256 public totalPoints;
 
-    
     UserAmount[] public userAmounts;
     uint256 public totalAmounts;
 
@@ -60,7 +58,6 @@ contract DeployEigenAirdrop is BaseScript {
     }
 
     function _deploy() internal {
-
         bytes memory initParams = abi.encodeWithSelector(
             EigenAirdrop.initialize.selector,
             data.airdropOwner,
@@ -74,9 +71,8 @@ contract DeployEigenAirdrop is BaseScript {
 
         vm.startBroadcast();
 
-          // TODO: remove deterministic deployment if not needed
+        // TODO: remove deterministic deployment if not needed
         EigenAirdrop eigenAirdropImpl = new EigenAirdrop{ salt: _SALT }();
-
 
         TransparentUpgradeableProxy proxy =
             new TransparentUpgradeableProxy{ salt: _SALT }(address(eigenAirdropImpl), data.proxyAdmin, initParams);
