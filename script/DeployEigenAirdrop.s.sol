@@ -15,7 +15,7 @@ import { console } from "forge-std/console.sol";
 contract DeployEigenAirdrop is BaseScript {
     uint256 public totalPoints;
 
-    uint256 public airdropDeadline;
+    
     UserAmount[] public userAmounts;
     uint256 public totalAmounts;
 
@@ -129,6 +129,6 @@ contract DeployEigenAirdrop is BaseScript {
         vm.serializeUint(json, "totalAmounts", totalAmounts);
         vm.serializeUint(json, "initialSafeBalance", initialSafeBalance);
         string memory finalJson = vm.serializeAddress(json, "strategyManager", data.strategyManager);
-        vm.writeJson(finalJson, getDeploymentFile());
+        vm.writeJson(finalJson, _getDeploymentFile());
     }
 }

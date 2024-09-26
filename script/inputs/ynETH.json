@@ -1,4 +1,5 @@
 {
+  "airdropDeadline": 1234567,
   "eigenPoints": [
     {
       "addr": "0x00000000051CBcE3fD04148CcE2c0adc7c651829",
