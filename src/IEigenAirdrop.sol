@@ -77,12 +77,6 @@ interface IEigenAirdrop {
     function updateUserAmounts(UserAmount[] calldata _userAmounts) external;
 
     /**
-     * @notice Returns the total amount of tokens available for the airdrop.
-     * @return The total amount of tokens for the airdrop.
-     */
-    function totalAmount() external view returns (uint256);
-
-    /**
      * @notice Returns the address of the safe holding the tokens.
      * @return The safe address.
      */

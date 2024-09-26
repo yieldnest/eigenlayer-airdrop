@@ -1,5 +1,6 @@
 {
-  "eigenAirdrop": "0xe63aa0C2EeA95F1eeDc9a04d77987F456a5FEf6a",
+  "eigenAirdropImplementation": "0xA843099971c53cF93331683e1F5B398C87cb98C1",
+  "eigenAirdropProxy": "0xBcd26CD1921f173CDbE4B4572E952F379606A8E8",
   "eigenToken": "0xec53bF9167f50cDEB3Ae105f56099aaaB9061F83",
   "initialSafeBalance": 124459120634647860000000,
   "owner": "0xcC369B9c3d35c4aA4B8051515415598B791C5Ba1",
@@ -7,6 +8,6 @@
   "rewardsSafe": "0xCCB2FEB7d8e081dcedFe1CFbefC9d46Eb383E389",
   "strategy": "0xaCB55C530Acdb2849e6d4f36992Cd8c9D50ED8F7",
   "strategyManager": "0x858646372CC42E1A627fcE94aa7A7033e7CF075A",
-  "totalAmounts": 124459120634647859999638,
+  "totalAmount": 124459120634647859999638,
   "totalPoints": 707849382
 }

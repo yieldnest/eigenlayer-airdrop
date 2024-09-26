@@ -27,9 +27,6 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
     /// @notice Stores the claimable amounts for each user.
     mapping(address user => uint256 amount) public amounts;
 
-    /// @notice The total amount of tokens available for the airdrop.
-    uint256 public totalAmount;
-
     /// @notice Address of the safe that holds the tokens.
     address public safe;
 
@@ -129,20 +126,12 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
      * @param _userAmounts An array of updated user amount.
      */
     function _updateUserAmounts(UserAmount[] calldata _userAmounts) internal {
-        uint256 _totalAmount = totalAmount;
-        for (uint256 i; i < _userAmounts.length; i++) {
-            if (amounts[_userAmounts[i].user] > 0) {
-                _totalAmount -= amounts[_userAmounts[i].user];
-            }
-            _totalAmount += _userAmounts[i].amount;
+        for (uint256 i; i < _userAmounts.length;) {
             amounts[_userAmounts[i].user] = _userAmounts[i].amount;
+            unchecked {
+                i += 1;
+            }
         }
-
-        uint256 safeBalance = token.balanceOf(safe);
-        if (safeBalance == 0 || _totalAmount > safeBalance) {
-            revert InvalidAirdrop();
-        }
-        totalAmount = _totalAmount;
     }
 
     /**
@@ -159,7 +148,6 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
     {
         token.safeTransferFrom(safe, msg.sender, _amountToClaim);
         amounts[msg.sender] -= _amountToClaim;
-        totalAmount -= _amountToClaim;
         emit Claimed(msg.sender, _amountToClaim);
     }
 
@@ -188,7 +176,6 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
             strategy, IStrategyToken(address(token)), _amountToClaim, msg.sender, _expiry, signature
         );
         amounts[msg.sender] -= _amountToClaim;
-        totalAmount -= _amountToClaim;
         emit ClaimedAndRestaked(msg.sender, _amountToClaim, shares);
     }
 }

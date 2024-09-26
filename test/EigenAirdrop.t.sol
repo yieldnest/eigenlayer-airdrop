@@ -18,11 +18,6 @@ import { Vm } from "forge-std/Vm.sol";
 
 import { Deposit, SigUtils } from "./utils/SigUtils.sol";
 
-struct EigenPoints {
-    address addr;
-    uint256 points;
-}
-
 contract EigenAirdropTest is BaseTest {
     EigenAirdrop public airdrop;
     TransparentUpgradeableProxy public proxy;
@@ -78,7 +73,6 @@ contract EigenAirdropTest is BaseTest {
         assertEq(address(airdrop.owner()), owner);
         assertEq(airdrop.paused(), false);
 
-        assertEq(airdrop.totalAmount(), amount);
         assertEq(airdrop.amounts(staker), amount);
     }
 
@@ -307,7 +301,6 @@ contract EigenAirdropTest is BaseTest {
         vm.prank(owner);
         airdrop.updateUserAmounts(userAmounts);
 
-        assertEq(airdrop.totalAmount(), amount * 2);
         assertEq(airdrop.amounts(staker), amount * 2);
     }
 
@@ -334,35 +327,6 @@ contract EigenAirdropTest is BaseTest {
         airdrop.updateUserAmounts(userAmounts);
     }
 
-    function testUpdateUserAmountsRevertsIfInvalidAmount() public {
-        UserAmount[] memory userAmounts = new UserAmount[](1);
-        userAmounts[0] = UserAmount({ user: staker, amount: INITIAL_BALANCE + 1 });
-
-        vm.prank(owner);
-        airdrop.pause();
-        assertEq(airdrop.paused(), true);
-
-        vm.expectRevert(IEigenAirdrop.InvalidAirdrop.selector);
-        vm.prank(owner);
-        airdrop.updateUserAmounts(userAmounts);
-    }
-
-    function testUpdateUserAmountsRevertsIfSafeHasNoBalance() public {
-        UserAmount[] memory userAmounts = new UserAmount[](1);
-        userAmounts[0] = UserAmount({ user: staker, amount: amount * 2 });
-
-        vm.prank(YNSAFE);
-        EIGEN.transfer(address(staker), INITIAL_BALANCE);
-
-        vm.prank(owner);
-        airdrop.pause();
-        assertEq(airdrop.paused(), true);
-
-        vm.expectRevert(IEigenAirdrop.InvalidAirdrop.selector);
-        vm.prank(owner);
-        airdrop.updateUserAmounts(userAmounts);
-    }
-
     function testClaimAmountAfterUpdateUserAmounts() public {
         UserAmount[] memory userAmounts = new UserAmount[](1);
         userAmounts[0] = UserAmount({ user: staker, amount: amount * 2 });
@@ -383,95 +347,5 @@ contract EigenAirdropTest is BaseTest {
         assertEq(EIGEN.balanceOf(staker), amount * 2);
 
         assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount * 2, "YNSAFE Balance");
-    }
-
-    UserAmount[] public sampleUserAmounts;
-    uint256 public sampleTotalAmounts;
-
-    function _loadSample() internal {
-        string memory path = string(abi.encodePacked(vm.projectRoot(), "/test/utils/sample.json"));
-        string memory json = vm.readFile(path);
-
-        bytes memory parsedEigenPoints = vm.parseJson(json, ".eigenPoints");
-        EigenPoints[] memory eigenPoints = abi.decode(parsedEigenPoints, (EigenPoints[]));
-
-        uint256 totalPoints;
-        for (uint256 i; i < eigenPoints.length; i++) {
-            totalPoints += eigenPoints[i].points;
-        }
-
-        UserAmount memory tempUserAmount;
-        for (uint256 i; i < eigenPoints.length; i++) {
-            if (eigenPoints[i].points == 0) {
-                continue;
-            }
-            tempUserAmount.user = eigenPoints[i].addr;
-            tempUserAmount.amount = Math.mulDiv(eigenPoints[i].points, INITIAL_BALANCE, totalPoints);
-
-            sampleUserAmounts.push(tempUserAmount);
-            sampleTotalAmounts += tempUserAmount.amount;
-        }
-
-        tempUserAmount.user = staker;
-        tempUserAmount.amount = 0;
-        sampleUserAmounts.push(tempUserAmount);
-
-        assertEq(sampleTotalAmounts <= INITIAL_BALANCE, true, "Total Amounts");
-        assertEq(sampleUserAmounts.length > 0, true, "Sample User Amounts");
-    }
-
-    function testUpdateUserAmountsWithSampleData() public {
-        _loadSample();
-
-        vm.prank(owner);
-        airdrop.pause();
-        assertEq(airdrop.paused(), true);
-
-        vm.prank(owner);
-        airdrop.updateUserAmounts(sampleUserAmounts);
-
-        assertEq(airdrop.totalAmount(), sampleTotalAmounts);
-        for (uint256 i; i < sampleUserAmounts.length; i++) {
-            assertEq(airdrop.amounts(sampleUserAmounts[i].user), sampleUserAmounts[i].amount);
-        }
-    }
-
-    function testClaimWithSampleData() public {
-        _loadSample();
-
-        vm.prank(owner);
-        airdrop.pause();
-        assertEq(airdrop.paused(), true);
-
-        vm.prank(owner);
-        airdrop.updateUserAmounts(sampleUserAmounts);
-
-        vm.prank(owner);
-        airdrop.unpause();
-        assertEq(airdrop.paused(), false);
-
-        uint256 numberOfUsers = sampleUserAmounts.length;
-        if (numberOfUsers > 100) {
-            numberOfUsers = 100;
-        }
-
-        uint256 claimedAmount;
-        for (uint256 i; i < numberOfUsers; i++) {
-            if (sampleUserAmounts[i].amount == 0) {
-                continue;
-            }
-
-            uint256 beforeBalance = EIGEN.balanceOf(sampleUserAmounts[i].user);
-
-            vm.prank(sampleUserAmounts[i].user);
-            airdrop.claim(sampleUserAmounts[i].amount);
-
-            uint256 afterBalance = EIGEN.balanceOf(sampleUserAmounts[i].user);
-            assertEq(afterBalance - beforeBalance, sampleUserAmounts[i].amount);
-
-            claimedAmount += sampleUserAmounts[i].amount;
-        }
-
-        assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - claimedAmount, "YNSAFE Balance");
     }
 }

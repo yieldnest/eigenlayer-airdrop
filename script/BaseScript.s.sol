@@ -14,9 +14,6 @@ struct EigenPoints {
 }
 
 contract BaseScript is BaseData {
-    /// @dev Needed for the deterministic deployments.
-    bytes32 internal constant _SALT = bytes32("ynETH@v0.0.1");
-
     Data public data;
     uint256 public initialSafeBalance;
 
@@ -24,7 +21,7 @@ contract BaseScript is BaseData {
     UserAmount[] public userAmounts;
 
     uint256 public totalPoints;
-    uint256 public totalAmounts;
+    uint256 public totalAmount;
 
     error ChainIdNotSupported(uint256 chainId);
     error InvalidInput();
@@ -55,10 +52,10 @@ contract BaseScript is BaseData {
             tempUserAmount.amount = Math.mulDiv(eigenPoints[i].points, initialSafeBalance, totalPoints);
 
             userAmounts.push(tempUserAmount);
-            totalAmounts += tempUserAmount.amount;
+            totalAmount += tempUserAmount.amount;
         }
 
-        if (totalAmounts > initialSafeBalance) {
+        if (totalAmount > initialSafeBalance) {
             revert InvalidInput();
         }
         if (userAmounts.length == 0) {
@@ -82,8 +79,8 @@ contract BaseScript is BaseData {
             totalPoints += ePoints[i].points;
         }
 
-        console.log("Total Parsed Eigen Points: ", totalPoints);
-        console.log("Total Input Eigen Points: ", totalYnETHHolderEigenPoints);
+        // console.log("Total Parsed Eigen Points: ", totalPoints);
+        // console.log("Total Input Eigen Points: ", totalYnETHHolderEigenPoints);
 
         // if (totalPoints != totalYnETHHolderEigenPoints) {
         //     revert InvalidInput();

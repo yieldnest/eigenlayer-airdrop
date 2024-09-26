@@ -1,3 +1,10 @@
+# Default values
+csv ?= script/inputs/ynETH.csv
+json ?= script/inputs/ynETH.json
+network ?= mainnet
+deployerAccountName := $(shell grep '^DEPLOYER_ACCOUNT_NAME=' .env | cut -d '=' -f2)
+deployerAddress := $(shell grep '^DEPLOYER_ADDRESS=' .env | cut -d '=' -f2)
+
 # Default target
 .PHONY: all
 all: clean install build
@@ -25,7 +32,12 @@ compile:
 # Run the tests using forge
 .PHONY: test
 test:
-	forge test
+	forge test -vvv
+
+# Create a gas snapshot
+.PHONY: snapshot
+snapshot:
+	forge snapshot
 
 # Generate a coverage report
 .PHONY: coverage
@@ -35,7 +47,7 @@ coverage:
 # Generate a coverage report and create an HTML report
 .PHONY: coverage-report
 coverage-report:
-	forge coverage --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage
+	forge coverage --report lcov && genhtml lcov.info --output-directory coverage
 
 # Show the coverage report
 .PHONY: coverage-show
@@ -52,15 +64,11 @@ lint:
 format:
 	forge fmt --root .
 
-
 # make convert csv=script/input/ynETH.csv
-csv ?= script/inputs/ynETH.csv
 .PHONY: convert
 convert:
 	bash ./script/bash/convertCSVjson.sh ${csv}
 
-json ?= script/inputs/ynETH.json
-network ?= mainnet
 # make simulate json=script/inputs/ynETH.json network=mainnet
 .PHONY: simulate
 simulate:
@@ -69,4 +77,4 @@ simulate:
 # make deploy json=script/inputs/ynETH.json network=mainnet
 .PHONY: deploy
 deploy:
-	forge script DeployEigenAirdrop --sig "run(string memory)" ${json} --rpc-url ${network} --broadcast --verify
+	forge script DeployEigenAirdrop --sig "run(string memory)" ${json} --rpc-url ${network} --account ${deployerAccountName} --sender ${deployerAddress} --slow --broadcast --verify
