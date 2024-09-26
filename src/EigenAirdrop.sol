@@ -201,6 +201,13 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
     function updateUserAmounts(UserAmount[] memory _userAmounts) external onlyOwner whenPaused {
         _updateUserAmounts(_userAmounts);
     }
+    /**
+     * @notice Updates the claim deadline
+     @param _newDeadline the timestamp of the new claim deadline
+     */
+    function setDeadline(uint256 _newDeadline) external onlyOwner {
+          deadline = _newDeadline;
+    }
 
     /**
      * @dev Internal function to update user amount and recalculate claimable amounts.

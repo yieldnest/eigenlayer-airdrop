@@ -95,6 +95,17 @@ contract EigenAirdropTest is BaseTest {
         assertEq(EIGEN.balanceOf(staker), 0);
     }
 
+    function testSetDeadline(uint256 _newDeadline) public {
+        vm.prank(owner);
+        airdrop.setDeadline(_newDeadline);
+        assertEq(airdrop.deadline(), _newDeadline);
+    }
+
+    function testSetDeadlineRevertsNotOwner(uint256 _newDeadline) public {
+        vm.expectRevert();
+        airdrop.setDeadline(_newDeadline);
+    }
+
     function testClaimThenStake() public {
         uint256 sharesBefore = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
 

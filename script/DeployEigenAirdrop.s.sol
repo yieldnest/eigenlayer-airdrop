@@ -6,6 +6,8 @@ import { EigenAirdrop, IEigenAirdrop, UserAmount } from "../src/EigenAirdrop.sol
 import { BaseScript } from "./BaseScript.s.sol";
 import { TransparentUpgradeableProxy } from
     "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { Strings } from
+    "@openzeppelin/contracts/utils/Strings.sol";
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { console } from "forge-std/console.sol";
@@ -15,7 +17,7 @@ contract DeployEigenAirdrop is BaseScript {
 
     uint256 public airdropDeadline;
     UserAmount[] public userAmounts;
-    uint256 public totalAmount;
+    uint256 public totalAmounts;
 
     EigenAirdrop public eigenAirdrop;
 
@@ -37,10 +39,11 @@ contract DeployEigenAirdrop is BaseScript {
             tempUserAmount.amount = Math.mulDiv(eigenPoints[i].points, initialSafeBalance, totalPoints);
 
             userAmounts.push(tempUserAmount);
-            totalAmount += tempUserAmount.amount;
+            totalAmounts += tempUserAmount.amount;
         }
 
-        if (totalAmount > initialSafeBalance) {
+        console.log(totalAmounts);
+        if (totalAmounts > initialSafeBalance) {
             revert InvalidInput();
         }
         if (userAmounts.length == 0) {
@@ -74,8 +77,9 @@ contract DeployEigenAirdrop is BaseScript {
 
         vm.startBroadcast();
 
-        // TODO: remove deterministic deployment if not needed
+          // TODO: remove deterministic deployment if not needed
         EigenAirdrop eigenAirdropImpl = new EigenAirdrop{ salt: _SALT }();
+
 
         TransparentUpgradeableProxy proxy =
             new TransparentUpgradeableProxy{ salt: _SALT }(address(eigenAirdropImpl), data.proxyAdmin, initParams);
@@ -85,10 +89,15 @@ contract DeployEigenAirdrop is BaseScript {
         eigenAirdrop = EigenAirdrop(address(proxy));
 
         console.log("Deployed EigenAirdrop at address: ", address(eigenAirdrop));
+        console.log(eigenAirdrop.totalAmount(), totalAmounts);
+        console.log(eigenAirdrop.deadline(), airdropDeadline);
+        console.log(eigenAirdrop.owner(), data.airdropOwner);
+        console.log(eigenAirdrop.safe() , data.rewardsSafe);
+        console.log(address(eigenAirdrop.token()) , data.eigenToken);
     }
 
     function _verify() internal view {
-        if (eigenAirdrop.totalAmount() != totalAmount) {
+        if (eigenAirdrop.totalAmount() != totalAmounts) {
             revert InvalidDeployment();
         }
         if (eigenAirdrop.deadline() != airdropDeadline) {
@@ -109,6 +118,17 @@ contract DeployEigenAirdrop is BaseScript {
     }
 
     function _save() internal {
-        // TODO: save deployment to file
+        string memory json;
+        vm.serializeAddress(json, "eigenAirdrop", address(eigenAirdrop));
+        vm.serializeAddress(json, "owner", data.airdropOwner);
+        vm.serializeAddress(json, "rewardsSafe", data.rewardsSafe);
+        vm.serializeAddress(json, "eigenToken", data.eigenToken);
+        vm.serializeAddress(json, "strategy", data.strategy);
+        vm.serializeUint(json, "airdropDeadline", airdropDeadline);
+        vm.serializeUint(json, "totalPoints", totalPoints);
+        vm.serializeUint(json, "totalAmounts", totalAmounts);
+        vm.serializeUint(json, "initialSafeBalance", initialSafeBalance);
+        string memory finalJson = vm.serializeAddress(json, "strategyManager", data.strategyManager);
+        vm.writeJson(finalJson, getDeploymentFile());
     }
 }

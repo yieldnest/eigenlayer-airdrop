@@ -65,3 +65,6 @@ network ?= mainnet
 .PHONY: deploy
 deploy:
 	forge script DeployEigenAirdrop --rpc-url ${network} --sig "run(string memory)" ${json}
+
+simulate:  
+	forge script DeployEigenAirdrop --sig "run(string memory)" ${json} --rpc-url ${network}
