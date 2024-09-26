@@ -15,6 +15,7 @@ contract BaseScript is BaseData {
     bytes32 internal constant _SALT = bytes32("ynETH@v0.0.1");
 
     Data public data;
+    uint256 public airdropDeadline;
     uint256 public initialSafeBalance;
     EigenPoints[] public eigenPoints;
 
@@ -44,6 +45,7 @@ contract BaseScript is BaseData {
         bytes memory parsedEigenPoints = vm.parseJson(json, ".eigenPoints");
         EigenPoints[] memory ePoints = abi.decode(parsedEigenPoints, (EigenPoints[]));
         uint256 totalYnETHHolderEigenPoints = vm.parseJsonUint(json, ".totalYnETHHolderEigenPoints");
+        airdropDeadline = vm.parseJsonUint(json, ".airdropDeadline");
 
         delete eigenPoints;
 
@@ -61,7 +63,7 @@ contract BaseScript is BaseData {
         // }
     }
 
-    function getDeploymentFile() internal virtual view returns (string memory) {
+    function _getDeploymentFile() internal virtual view returns (string memory) {
         string memory root = vm.projectRoot();
         return string.concat(root, "/deployments/ynETH-", vm.toString(block.chainid), ".json");
     }
