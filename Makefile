@@ -59,12 +59,14 @@ csv ?= script/inputs/ynETH.csv
 convert:
 	bash ./script/bash/convertCSVjson.sh ${csv}
 
-# make deploy json=script/inputs/ynETH.json network=mainnet
 json ?= script/inputs/ynETH.json
 network ?= mainnet
+# make simulate json=script/inputs/ynETH.json network=mainnet
+.PHONY: simulate
+simulate:
+	forge script DeployEigenAirdrop --sig "run(string memory)" ${json} --rpc-url ${network}
+
+# make deploy json=script/inputs/ynETH.json network=mainnet
 .PHONY: deploy
 deploy:
-	forge script DeployEigenAirdrop --rpc-url ${network} --sig "run(string memory)" ${json}
-
-simulate:  
-	forge script DeployEigenAirdrop --sig "run(string memory)" ${json} --rpc-url ${network}
+	forge script DeployEigenAirdrop --sig "run(string memory)" ${json} --rpc-url ${network} --broadcast --verify

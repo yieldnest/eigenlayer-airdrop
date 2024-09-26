@@ -8,49 +8,15 @@ import { TransparentUpgradeableProxy } from
     "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { console } from "forge-std/console.sol";
 
 contract DeployEigenAirdrop is BaseScript {
-    uint256 public totalPoints;
-
-    UserAmount[] public userAmounts;
-    uint256 public totalAmounts;
-
     EigenAirdrop public eigenAirdrop;
 
     error InvalidDeployment();
 
-    function _calculateUserAmounts() internal {
-        // get total points
-        for (uint256 i; i < eigenPoints.length; i++) {
-            totalPoints += eigenPoints[i].points;
-        }
-
-        //create user amounts
-        UserAmount memory tempUserAmount;
-        for (uint256 i; i < eigenPoints.length; i++) {
-            if (eigenPoints[i].points == 0) {
-                continue;
-            }
-            tempUserAmount.user = eigenPoints[i].addr;
-            tempUserAmount.amount = Math.mulDiv(eigenPoints[i].points, initialSafeBalance, totalPoints);
-
-            userAmounts.push(tempUserAmount);
-            totalAmounts += tempUserAmount.amount;
-        }
-
-        if (totalAmounts > initialSafeBalance) {
-            revert InvalidInput();
-        }
-        if (userAmounts.length == 0) {
-            revert InvalidInput();
-        }
-    }
-
     function run(string memory _path) public {
         _loadInput(_path);
-        _calculateUserAmounts();
 
         _deploy();
         _verify();
@@ -65,7 +31,6 @@ contract DeployEigenAirdrop is BaseScript {
             data.eigenToken,
             data.strategy,
             data.strategyManager,
-            airdropDeadline,
             userAmounts
         );
 
@@ -88,9 +53,6 @@ contract DeployEigenAirdrop is BaseScript {
         if (eigenAirdrop.totalAmount() != totalAmounts) {
             revert InvalidDeployment();
         }
-        if (eigenAirdrop.deadline() != airdropDeadline) {
-            revert InvalidDeployment();
-        }
         if (eigenAirdrop.owner() != data.airdropOwner) {
             revert InvalidDeployment();
         }
@@ -109,10 +71,10 @@ contract DeployEigenAirdrop is BaseScript {
         string memory json;
         vm.serializeAddress(json, "eigenAirdrop", address(eigenAirdrop));
         vm.serializeAddress(json, "owner", data.airdropOwner);
+        vm.serializeAddress(json, "proxyAdmin", data.proxyAdmin);
         vm.serializeAddress(json, "rewardsSafe", data.rewardsSafe);
         vm.serializeAddress(json, "eigenToken", data.eigenToken);
         vm.serializeAddress(json, "strategy", data.strategy);
-        vm.serializeUint(json, "airdropDeadline", airdropDeadline);
         vm.serializeUint(json, "totalPoints", totalPoints);
         vm.serializeUint(json, "totalAmounts", totalAmounts);
         vm.serializeUint(json, "initialSafeBalance", initialSafeBalance);
