@@ -61,8 +61,6 @@ contract DeployEigenAirdrop is BaseScript {
     }
 
     function _deploy() internal {
-        // TODO: take deadline from input
-        airdropDeadline = block.timestamp + 30 days;
 
         bytes memory initParams = abi.encodeWithSelector(
             EigenAirdrop.initialize.selector,
