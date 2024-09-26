@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Check if jq is installed
 if ! command -v jq &>/dev/null; then
     echo "jq could not be found. Please install jq to use this script."
@@ -14,6 +16,7 @@ fi
 
 # Get the CSV file name from the argument
 csv_file="$1"
+echo "Input CSV file: $csv_file"
 
 # Convert the CSV file to JSON using jq
 jq -R -s -c '
@@ -56,4 +59,4 @@ jq -R -s -c '
   | .totalEigenPointsToAug15th |= (tonumber * 100 | floor)
 ' | jq . | tee "${csv_file%.csv}.json" > /dev/null
 
-echo "Conversion complete. JSON file saved as ${csv_file%.csv}.json"
+echo "Output JSON file: ${csv_file%.csv}.json"
