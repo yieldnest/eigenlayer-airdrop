@@ -42,7 +42,6 @@ contract DeployEigenAirdrop is BaseScript {
             totalAmounts += tempUserAmount.amount;
         }
 
-        console.log(totalAmounts);
         if (totalAmounts > initialSafeBalance) {
             revert InvalidInput();
         }
