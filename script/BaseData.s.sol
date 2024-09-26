@@ -21,7 +21,7 @@ contract BaseData is Script {
 
     mapping(uint256 chainId => Data data) private __data;
 
-    ChainIds public chainIds = ChainIds({ mainnet: 1, anvil: 31337 });
+    ChainIds public chainIds = ChainIds({ mainnet: 1, anvil: 31_337 });
 
     address private TEMP_AIRDROP_OWNER;
     address private TEMP_PROXY_CONTROLLER;
@@ -46,6 +46,6 @@ contract BaseData is Script {
     }
 
     function isSupportedChainId(uint256 chainId) internal view returns (bool) {
-        return chainId == chainIds.mainnet ||  chainId == chainIds.anvil;
+        return chainId == chainIds.mainnet || chainId == chainIds.anvil;
     }
 }

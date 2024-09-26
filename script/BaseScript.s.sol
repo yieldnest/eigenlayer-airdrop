@@ -63,9 +63,8 @@ contract BaseScript is BaseData {
         // }
     }
 
-    function _getDeploymentFile() internal virtual view returns (string memory) {
+    function _getDeploymentFile() internal view virtual returns (string memory) {
         string memory root = vm.projectRoot();
         return string.concat(root, "/deployments/ynETH-", vm.toString(block.chainid), ".json");
     }
-
 }
