@@ -8,16 +8,16 @@ import { console } from "forge-std/console.sol";
 
 import { UserAmount } from "../src/IEigenAirdrop.sol";
 
-struct EigenPoints {
+struct EigenTokens {
     address addr;
-    uint256 points;
+    uint256 tokens;
 }
 
 contract BaseScript is BaseData {
     Data public data;
     uint256 public initialSafeBalance;
 
-    EigenPoints[] public eigenPoints;
+    EigenTokens[] public eigenTokens;
     UserAmount[] public userAmounts;
 
     uint256 public totalPoints;
@@ -44,12 +44,13 @@ contract BaseScript is BaseData {
 
     function _calculateUserAmounts() internal {
         UserAmount memory tempUserAmount;
-        for (uint256 i; i < eigenPoints.length; i++) {
-            if (eigenPoints[i].points == 0) {
+        for (uint256 i; i < eigenTokens.length; i++) {
+            if (eigenTokens[i].points == 0) {
                 continue;
             }
-            tempUserAmount.user = eigenPoints[i].addr;
-            tempUserAmount.amount = Math.mulDiv(eigenPoints[i].points, initialSafeBalance, totalPoints);
+            tempUserAmount.user = eigenTokens[i].addr;
+            // tempUserAmount.amount = Math.mulDiv(eigenTokens[i].points, initialSafeBalance, totalPoints);
+            tempUserAmount.amount = eigenToken[i].tokens;
 
             userAmounts.push(tempUserAmount);
             totalAmount += tempUserAmount.amount;
@@ -67,14 +68,14 @@ contract BaseScript is BaseData {
         string memory path = string(abi.encodePacked(vm.projectRoot(), "/", _path));
         string memory json = vm.readFile(path);
 
-        bytes memory parsedEigenPoints = vm.parseJson(json, ".eigenPoints");
-        EigenPoints[] memory ePoints = abi.decode(parsedEigenPoints, (EigenPoints[]));
+        bytes memory parsedEigenTokens = vm.parseJson(json, ".tokens");
+        EigenTokens[] memory ePoints = abi.decode(parsedEigenTokens, (EigenTokens[]));
 
-        delete eigenPoints;
+        delete eigenTokens;
 
         totalPoints = 0;
         for (uint256 i; i < ePoints.length; i++) {
-            eigenPoints.push(ePoints[i]);
+            eigenTokens.push(ePoints[i]);
             totalPoints += ePoints[i].points;
         }
 
