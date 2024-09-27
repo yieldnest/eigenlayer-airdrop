@@ -14,6 +14,7 @@ contract BaseTest is Test {
     StrategyManager internal constant STRATEGY_MANAGER =
         StrategyManager(0x858646372CC42E1A627fcE94aa7A7033e7CF075A);
     IStrategy internal constant STRATEGY = IStrategy(0xaCB55C530Acdb2849e6d4f36992Cd8c9D50ED8F7);
+    address OPERATOR = 0xa83e07353A9ED2aF88e7281a2fA7719c01356D8e;
 
     uint256 internal constant INITIAL_BALANCE = 124_459_120_634_647_860_000_000;
 

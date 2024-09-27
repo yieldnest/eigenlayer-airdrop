@@ -8,12 +8,12 @@ import { IERC20 } from "@openzeppelin-v5.0.2/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin-v5.0.2/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin-v5.0.2/utils/math/Math.sol";
 
+import { ISignatureUtils } from "eigenlayer-contracts/interfaces/ISignatureUtils.sol";
 import {
     IERC20 as IStrategyToken,
     IStrategy,
     IStrategyManager
 } from "eigenlayer-contracts/interfaces/IStrategyManager.sol";
-import { ISignatureUtils } from "eigenlayer-contracts/interfaces/ISignatureUtils.sol";
 
 import { IEigenAirdrop, UserAmount } from "./IEigenAirdrop.sol";
 
@@ -181,9 +181,9 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         emit ClaimedAndRestaked(msg.sender, _amountToClaim, shares);
     }
 
-
     /**
-     * @notice Claims and restakes the specified amount of tokens using a signature and delegates to another address.
+     * @notice Claims and restakes the specified amount of tokens using a signature and delegates to another
+     * address.
      * @param _amountToClaim The amount of tokens to claim.
      * @param _expiry The expiry time of the signature.
      * @param _signature The user's signature authorizing the restaking.
@@ -202,26 +202,18 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         returns (uint256 shares)
     {
         // Create a default SignatureWithExpiry struct
-        ISignatureUtils.SignatureWithExpiry memory defaultSignature = ISignatureUtils.SignatureWithExpiry({
-            signature: "",
-            expiry: 0
-        });
+        ISignatureUtils.SignatureWithExpiry memory defaultSignature =
+            ISignatureUtils.SignatureWithExpiry({ signature: "", expiry: 0 });
 
         // Call the more detailed function with default values for the last two parameters
         return claimAndRestakeWithSignatureAndDelegate(
-            _amountToClaim,
-            _expiry,
-            _signature,
-            _operator,
-            _stakerSignatureAndExpiry,
-            defaultSignature,
-            bytes32(0)
+            _amountToClaim, _expiry, _signature, _operator, _stakerSignatureAndExpiry, defaultSignature, bytes32(0)
         );
     }
 
-
     /**
-     * @notice Claims and restakes the specified amount of tokens using a signature and delegates to another address.
+     * @notice Claims and restakes the specified amount of tokens using a signature and delegates to another
+     * address.
      * @param _amountToClaim The amount of tokens to claim.
      * @param _expiry The expiry time of the signature.
      * @param _signature The user's signature authorizing the restaking.
@@ -255,11 +247,7 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
 
         // Call delegate on delegationManager
         strategyManager.delegation().delegateToBySignature(
-            msg.sender,
-            _operator,
-            _stakerSignatureAndExpiry,
-            _approverSignatureAndExpiry,
-            _approverSalt
+            msg.sender, _operator, _stakerSignatureAndExpiry, _approverSignatureAndExpiry, _approverSalt
         );
 
         emit ClaimedAndRestakedAndDelegated(msg.sender, _amountToClaim, shares, _operator);

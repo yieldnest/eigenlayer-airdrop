@@ -39,12 +39,7 @@ contract DeployEigenAirdrop is BaseScript {
         eigenAirdrop = EigenAirdrop(address(proxy));
 
         eigenAirdrop.initialize(
-            data.airdropOwner,
-            data.rewardsSafe,
-            data.eigenToken,
-            data.strategy,
-            data.strategyManager,
-            userAmounts
+            data.airdropOwner, data.rewardsSafe, data.eigenToken, data.strategy, data.strategyManager, userAmounts
         );
 
         console.log("Initialized EigenAirdrop with owner: ", data.airdropOwner);

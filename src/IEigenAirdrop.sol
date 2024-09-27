@@ -63,7 +63,8 @@ interface IEigenAirdrop {
         returns (uint256);
 
     /**
-     * @notice Claims and restakes the specified amount of tokens using a signature and delegates to another address.
+     * @notice Claims and restakes the specified amount of tokens using a signature and delegates to another
+     * address.
      * @param _amountToClaim The amount of tokens to claim.
      * @param _expiry The expiry time of the signature.
      * @param _signature The user's signature authorizing the restaking.

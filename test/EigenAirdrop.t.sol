@@ -14,12 +14,15 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import { ISignatureUtils } from "eigenlayer-contracts/interfaces/ISignatureUtils.sol";
+
 import { Vm } from "forge-std/Vm.sol";
 
 import { Deposit, SigUtils } from "./utils/SigUtils.sol";
 
 contract EigenAirdropTest is BaseTest {
     EigenAirdrop public airdrop;
+    EigenAirdrop public airdropImplementation;
     TransparentUpgradeableProxy public proxy;
 
     address public proxyAdmin = makeAddr("proxyAdmin");
@@ -37,7 +40,7 @@ contract EigenAirdropTest is BaseTest {
         stakerWallet = vm.createWallet("staker");
         staker = stakerWallet.addr;
 
-        EigenAirdrop airdropImplementation = new EigenAirdrop();
+        airdropImplementation = new EigenAirdrop();
 
         UserAmount[] memory userAmounts = new UserAmount[](1);
         userAmounts[0] = UserAmount({ user: staker, amount: amount });
@@ -74,6 +77,41 @@ contract EigenAirdropTest is BaseTest {
         assertEq(airdrop.paused(), false);
 
         assertEq(airdrop.amounts(staker), amount);
+    }
+
+    function testInvalidInitialization() public {
+        {
+            bytes memory initParams = abi.encodeWithSelector(
+                EigenAirdrop.initialize.selector,
+                address(0),
+                address(YNSAFE),
+                address(EIGEN),
+                address(STRATEGY),
+                address(STRATEGY_MANAGER),
+                new UserAmount[](0)
+            );
+
+            bytes memory revertData =
+                abi.encodeWithSelector(OwnableUpgradeable.OwnableInvalidOwner.selector, address(0));
+
+            vm.expectRevert(revertData);
+            new TransparentUpgradeableProxy(address(airdropImplementation), proxyAdmin, initParams);
+        }
+
+        {
+            bytes memory initParams = abi.encodeWithSelector(
+                EigenAirdrop.initialize.selector,
+                address(owner),
+                address(0),
+                address(EIGEN),
+                address(STRATEGY),
+                address(STRATEGY_MANAGER),
+                new UserAmount[](0)
+            );
+
+            vm.expectRevert(IEigenAirdrop.InvalidInit.selector);
+            new TransparentUpgradeableProxy(address(airdropImplementation), proxyAdmin, initParams);
+        }
     }
 
     function testPause() public {
@@ -349,7 +387,6 @@ contract EigenAirdropTest is BaseTest {
         assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount * 2, "YNSAFE Balance");
     }
 
-
     function testClaimAndRestakeWithSignatureAndDelegate() public {
         bool forbidden = STRATEGY_MANAGER.thirdPartyTransfersForbidden(STRATEGY);
         assertEq(forbidden, true, "Third party transfers are not forbidden");
@@ -362,35 +399,45 @@ contract EigenAirdropTest is BaseTest {
 
         uint256 sharesBefore = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
 
+        uint256 expiry = block.timestamp + 1 days;
+
         Deposit memory deposit = Deposit({
             staker: staker,
             strategy: address(STRATEGY),
             token: address(EIGEN),
             amount: amount,
             nonce: STRATEGY_MANAGER.nonces(staker),
-            expiry: block.timestamp + 1 days
+            expiry: expiry
         });
 
-        bytes32 digest = SigUtils.getDepositDigest(address(STRATEGY_MANAGER), deposit);
+        bytes32 depositDigest = SigUtils.getDepositDigest(address(STRATEGY_MANAGER), deposit);
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(stakerWallet, digest);
-        bytes memory signature = abi.encodePacked(r, s, v);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(stakerWallet, depositDigest);
+        bytes memory depositSignature = abi.encodePacked(r, s, v);
 
-        address OPERATOR_A41 = 0xa83e07353A9ED2aF88e7281a2fA7719c01356D8e;
+        bytes32 currentStakerDelegationDigestHash =
+            STRATEGY_MANAGER.delegation().calculateCurrentStakerDelegationDigestHash(staker, OPERATOR, expiry);
+
+        (v, r, s) = vm.sign(stakerWallet, currentStakerDelegationDigestHash);
+
+        ISignatureUtils.SignatureWithExpiry memory stakerSignatureWithExpiry =
+            ISignatureUtils.SignatureWithExpiry({ expiry: expiry, signature: abi.encodePacked(r, s, v) });
 
         vm.prank(staker);
-        // uint256 shares = airdrop.claimAndRestakeWithSignatureAndDelegate(amount, deposit.expiry, signature, OPERATOR_A41);
+        uint256 shares = airdrop.claimAndRestakeWithSignatureAndDelegate(
+            amount, expiry, depositSignature, OPERATOR, stakerSignatureWithExpiry
+        );
 
-        // assertEq(EIGEN.balanceOf(staker), 0, "User Balance");
-        // assertEq(shares, amount, "Shares");
+        assertEq(EIGEN.balanceOf(staker), 0, "User Balance");
+        assertEq(shares, amount, "Shares");
 
-        // uint256 sharesAfter = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
-        // assertEq(sharesAfter, sharesBefore + shares, "Shares After");
+        uint256 sharesAfter = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
+        assertEq(sharesAfter, sharesBefore + shares, "Shares After");
 
-        // assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount, "YNSAFE Balance");
+        assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount, "YNSAFE Balance");
 
-        // // Assert that the staker is delegated to the specified operator
-        // address delegatedOperator = STRATEGY_MANAGER.delegation().delegatedTo(staker);
-        // assertEq(delegatedOperator, OPERATOR_A41, "Staker should be delegated to the specified operator");
+        // Assert that the staker is delegated to the specified operator
+        address delegatedOperator = STRATEGY_MANAGER.delegation().delegatedTo(staker);
+        assertEq(delegatedOperator, OPERATOR, "Staker should be delegated to the specified operator");
     }
 }

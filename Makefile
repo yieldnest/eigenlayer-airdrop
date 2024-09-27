@@ -69,11 +69,11 @@ format:
 convert:
 	bash ./script/bash/convertCSVjson.sh ${csv}
 
-# make simulate json=script/inputs/ynETH.json network=mainnet --account <deployerAccountName> --sender <deployerAddress> --slow
+# make simulate json=script/inputs/ynETH.json network=mainnet
 
 .PHONY: simulate
 simulate:
-	forge script DeployEigenAirdrop --sig "run(string memory)" ${json} --rpc-url ${network}
+	forge script DeployEigenAirdrop --sig "run(string memory)" ${json} --rpc-url ${network} --account ${deployerAccountName} --sender ${deployerAddress} --slow
 
 
 # make deploy json=script/inputs/ynETH.json network=mainnet
