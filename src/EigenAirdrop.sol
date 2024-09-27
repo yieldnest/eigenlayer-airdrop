@@ -13,6 +13,7 @@ import {
     IStrategy,
     IStrategyManager
 } from "eigenlayer-contracts/interfaces/IStrategyManager.sol";
+import {ISignatureUtils} from "eigenlayer-contracts/interfaces/ISignatureUtils.sol";
 
 import { IEigenAirdrop, UserAmount } from "./IEigenAirdrop.sol";
 
@@ -177,5 +178,68 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         );
         amounts[msg.sender] -= _amountToClaim;
         emit ClaimedAndRestaked(msg.sender, _amountToClaim, shares);
+    }
+
+
+    function claimAndRestakeWithSignatureAndDelegate(
+        uint256 _amountToClaim,
+        uint256 _expiry,
+        bytes calldata signature,
+        address operator,
+        ISignatureUtils.SignatureWithExpiry memory stakerSignatureAndExpiry
+    )
+        external
+        returns (uint256 shares)
+    {
+        // Create a default SignatureWithExpiry struct
+        ISignatureUtils.SignatureWithExpiry memory defaultSignature = ISignatureUtils.SignatureWithExpiry({
+            signature: "",
+            expiry: 0
+        });
+
+        // Call the more detailed function with default values for the last two parameters
+        return claimAndRestakeWithSignatureAndDelegate(
+            _amountToClaim,
+            _expiry,
+            signature,
+            operator,
+            stakerSignatureAndExpiry,
+            defaultSignature,
+            bytes32(0)
+        );
+    }
+
+
+    function claimAndRestakeWithSignatureAndDelegate(
+        uint256 _amountToClaim,
+        uint256 _expiry,
+        bytes calldata signature,
+        address operator,
+        ISignatureUtils.SignatureWithExpiry memory stakerSignatureAndExpiry, 
+        ISignatureUtils.SignatureWithExpiry memory approverSignatureAndExpiry,
+        bytes32 approverSalt
+    )
+        public
+        nonReentrant
+        whenNotPaused
+        whenAvailable(_amountToClaim)
+        returns (uint256 shares)
+    {
+        token.safeTransferFrom(safe, address(this), _amountToClaim);
+        token.approve(address(strategyManager), _amountToClaim);
+        shares = strategyManager.depositIntoStrategyWithSignature(
+            strategy, IStrategyToken(address(token)), _amountToClaim, msg.sender, _expiry, signature
+        );
+        amounts[msg.sender] -= _amountToClaim;
+        // Call delegate on delegationManager
+        strategyManager.delegation().delegateToBySignature(
+            msg.sender,
+            operator,
+            stakerSignatureAndExpiry,
+            approverSignatureAndExpiry,
+            approverSalt
+        );
+
+        emit ClaimedAndRestakedAndDelegated(msg.sender, _amountToClaim, shares, operator);
     }
 }

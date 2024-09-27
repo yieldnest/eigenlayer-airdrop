@@ -348,4 +348,49 @@ contract EigenAirdropTest is BaseTest {
 
         assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount * 2, "YNSAFE Balance");
     }
+
+
+    function testClaimAndRestakeWithSignatureAndDelegate() public {
+        bool forbidden = STRATEGY_MANAGER.thirdPartyTransfersForbidden(STRATEGY);
+        assertEq(forbidden, true, "Third party transfers are not forbidden");
+
+        vm.prank(strategyWhitelister);
+        STRATEGY_MANAGER.setThirdPartyTransfersForbidden(STRATEGY, false);
+
+        forbidden = STRATEGY_MANAGER.thirdPartyTransfersForbidden(STRATEGY);
+        assertEq(forbidden, false, "Third party transfers are forbidden");
+
+        uint256 sharesBefore = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
+
+        Deposit memory deposit = Deposit({
+            staker: staker,
+            strategy: address(STRATEGY),
+            token: address(EIGEN),
+            amount: amount,
+            nonce: STRATEGY_MANAGER.nonces(staker),
+            expiry: block.timestamp + 1 days
+        });
+
+        bytes32 digest = SigUtils.getDepositDigest(address(STRATEGY_MANAGER), deposit);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(stakerWallet, digest);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        address OPERATOR_A41 = 0xa83e07353A9ED2aF88e7281a2fA7719c01356D8e;
+
+        vm.prank(staker);
+        // uint256 shares = airdrop.claimAndRestakeWithSignatureAndDelegate(amount, deposit.expiry, signature, OPERATOR_A41);
+
+        // assertEq(EIGEN.balanceOf(staker), 0, "User Balance");
+        // assertEq(shares, amount, "Shares");
+
+        // uint256 sharesAfter = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
+        // assertEq(sharesAfter, sharesBefore + shares, "Shares After");
+
+        // assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount, "YNSAFE Balance");
+
+        // // Assert that the staker is delegated to the specified operator
+        // address delegatedOperator = STRATEGY_MANAGER.delegation().delegatedTo(staker);
+        // assertEq(delegatedOperator, OPERATOR_A41, "Staker should be delegated to the specified operator");
+    }
 }

@@ -115,6 +115,13 @@ interface IEigenAirdrop {
     /// @param newDeadline The new deadline timestamp.
     event DeadlineUpdated(uint256 newDeadline);
 
+    /// @notice Emitted when a user claims, restakes tokens, and delegates.
+    /// @param user The address of the user.
+    /// @param amount The amount of tokens claimed and restaked.
+    /// @param shares The amount of shares received from restaking.
+    /// @param operator The address of the operator delegated to.
+    event ClaimedAndRestakedAndDelegated(address user, uint256 amount, uint256 shares, address operator);
+
     /**
      * @notice Thrown when no airdrop exists for the user.
      */
