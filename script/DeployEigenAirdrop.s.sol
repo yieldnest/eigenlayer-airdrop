@@ -26,22 +26,18 @@ contract DeployEigenAirdrop is BaseScript {
     }
 
     function _deploy() internal {
-        vm.broadcast();
+        vm.startBroadcast();
         eigenAirdropImpl = new EigenAirdrop();
 
         console.log("Deployed EigenAirdrop implementation at address: ", address(eigenAirdropImpl));
 
-        if (!Address.isContract(address(eigenAirdropImpl))) {
-            revert InvalidDeployment();
-        }
-
-        vm.broadcast();
         TransparentUpgradeableProxy proxy =
             new TransparentUpgradeableProxy(address(eigenAirdropImpl), data.proxyAdmin, "");
 
+        console.log("Deployed EigenAirdrop proxy at address: ", address(proxy));
+
         eigenAirdrop = EigenAirdrop(address(proxy));
 
-        vm.broadcast();
         eigenAirdrop.initialize(
             data.airdropOwner,
             data.rewardsSafe,
@@ -51,7 +47,9 @@ contract DeployEigenAirdrop is BaseScript {
             userAmounts
         );
 
-        console.log("Deployed EigenAirdrop at address: ", address(eigenAirdrop));
+        console.log("Initialized EigenAirdrop with owner: ", data.airdropOwner);
+
+        vm.stopBroadcast();
     }
 
     function _verify() internal view {

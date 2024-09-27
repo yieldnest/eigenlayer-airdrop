@@ -69,7 +69,6 @@ contract BaseScript is BaseData {
 
         bytes memory parsedEigenPoints = vm.parseJson(json, ".eigenPoints");
         EigenPoints[] memory ePoints = abi.decode(parsedEigenPoints, (EigenPoints[]));
-        uint256 totalYnETHHolderEigenPoints = vm.parseJsonUint(json, ".totalYnETHHolderEigenPoints");
 
         delete eigenPoints;
 
@@ -78,13 +77,6 @@ contract BaseScript is BaseData {
             eigenPoints.push(ePoints[i]);
             totalPoints += ePoints[i].points;
         }
-
-        // console.log("Total Parsed Eigen Points: ", totalPoints);
-        // console.log("Total Input Eigen Points: ", totalYnETHHolderEigenPoints);
-
-        // if (totalPoints != totalYnETHHolderEigenPoints) {
-        //     revert InvalidInput();
-        // }
 
         _calculateUserAmounts();
     }
