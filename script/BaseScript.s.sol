@@ -45,12 +45,12 @@ contract BaseScript is BaseData {
     function _calculateUserAmounts() internal {
         UserAmount memory tempUserAmount;
         for (uint256 i; i < eigenTokens.length; i++) {
-            if (eigenTokens[i].points == 0) {
+            if (eigenTokens[i].tokens == 0) {
                 continue;
             }
             tempUserAmount.user = eigenTokens[i].addr;
             // tempUserAmount.amount = Math.mulDiv(eigenTokens[i].points, initialSafeBalance, totalPoints);
-            tempUserAmount.amount = eigenToken[i].tokens;
+            tempUserAmount.amount = eigenTokens[i].tokens;
 
             userAmounts.push(tempUserAmount);
             totalAmount += tempUserAmount.amount;
@@ -67,16 +67,16 @@ contract BaseScript is BaseData {
     function _loadInput(string memory _path) internal {
         string memory path = string(abi.encodePacked(vm.projectRoot(), "/", _path));
         string memory json = vm.readFile(path);
+        bytes memory parsedJson = vm.parseJson(json);
 
-        bytes memory parsedEigenTokens = vm.parseJson(json, ".tokens");
-        EigenTokens[] memory ePoints = abi.decode(parsedEigenTokens, (EigenTokens[]));
+        EigenTokens[] memory ePoints = abi.decode(parsedJson, (EigenTokens[]));
 
         delete eigenTokens;
 
         totalPoints = 0;
         for (uint256 i; i < ePoints.length; i++) {
             eigenTokens.push(ePoints[i]);
-            totalPoints += ePoints[i].points;
+            totalPoints += ePoints[i].tokens;
         }
 
         _calculateUserAmounts();
