@@ -13,7 +13,7 @@ import {
     IStrategy,
     IStrategyManager
 } from "eigenlayer-contracts/interfaces/IStrategyManager.sol";
-import {ISignatureUtils} from "eigenlayer-contracts/interfaces/ISignatureUtils.sol";
+import { ISignatureUtils } from "eigenlayer-contracts/interfaces/ISignatureUtils.sol";
 
 import { IEigenAirdrop, UserAmount } from "./IEigenAirdrop.sol";
 
@@ -156,12 +156,13 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
      * @notice Claims and restakes the specified amount of tokens using a signature.
      * @param _amountToClaim The amount of tokens to claim.
      * @param _expiry The expiry time of the signature.
-     * @param signature The user's signature authorizing the restaking.
+     * @param _signature The user's signature authorizing the restaking.
+     * @return shares The amount of shares received from restaking.
      */
     function claimAndRestakeWithSignature(
         uint256 _amountToClaim,
         uint256 _expiry,
-        bytes calldata signature
+        bytes calldata _signature
     )
         external
         virtual
@@ -174,19 +175,28 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         token.safeTransferFrom(safe, address(this), _amountToClaim);
         token.approve(address(strategyManager), _amountToClaim);
         shares = strategyManager.depositIntoStrategyWithSignature(
-            strategy, IStrategyToken(address(token)), _amountToClaim, msg.sender, _expiry, signature
+            strategy, IStrategyToken(address(token)), _amountToClaim, msg.sender, _expiry, _signature
         );
         amounts[msg.sender] -= _amountToClaim;
         emit ClaimedAndRestaked(msg.sender, _amountToClaim, shares);
     }
 
 
+    /**
+     * @notice Claims and restakes the specified amount of tokens using a signature and delegates to another address.
+     * @param _amountToClaim The amount of tokens to claim.
+     * @param _expiry The expiry time of the signature.
+     * @param _signature The user's signature authorizing the restaking.
+     * @param _operator The address to delegate the voting power to.
+     * @param _stakerSignatureAndExpiry The signature and expiry of the staker.
+     * @return shares The amount of shares received from restaking.
+     */
     function claimAndRestakeWithSignatureAndDelegate(
         uint256 _amountToClaim,
         uint256 _expiry,
-        bytes calldata signature,
-        address operator,
-        ISignatureUtils.SignatureWithExpiry memory stakerSignatureAndExpiry
+        bytes calldata _signature,
+        address _operator,
+        ISignatureUtils.SignatureWithExpiry memory _stakerSignatureAndExpiry
     )
         external
         returns (uint256 shares)
@@ -201,23 +211,34 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         return claimAndRestakeWithSignatureAndDelegate(
             _amountToClaim,
             _expiry,
-            signature,
-            operator,
-            stakerSignatureAndExpiry,
+            _signature,
+            _operator,
+            _stakerSignatureAndExpiry,
             defaultSignature,
             bytes32(0)
         );
     }
 
 
+    /**
+     * @notice Claims and restakes the specified amount of tokens using a signature and delegates to another address.
+     * @param _amountToClaim The amount of tokens to claim.
+     * @param _expiry The expiry time of the signature.
+     * @param _signature The user's signature authorizing the restaking.
+     * @param _operator The address to delegate the voting power to.
+     * @param _stakerSignatureAndExpiry The signature and expiry of the staker.
+     * @param _approverSignatureAndExpiry The signature and expiry of the approver.
+     * @param _approverSalt The salt used for the approver signature.
+     * @return shares The amount of shares received from restaking.
+     */
     function claimAndRestakeWithSignatureAndDelegate(
         uint256 _amountToClaim,
         uint256 _expiry,
-        bytes calldata signature,
-        address operator,
-        ISignatureUtils.SignatureWithExpiry memory stakerSignatureAndExpiry, 
-        ISignatureUtils.SignatureWithExpiry memory approverSignatureAndExpiry,
-        bytes32 approverSalt
+        bytes calldata _signature,
+        address _operator,
+        ISignatureUtils.SignatureWithExpiry memory _stakerSignatureAndExpiry,
+        ISignatureUtils.SignatureWithExpiry memory _approverSignatureAndExpiry,
+        bytes32 _approverSalt
     )
         public
         nonReentrant
@@ -228,18 +249,19 @@ contract EigenAirdrop is IEigenAirdrop, OwnableUpgradeable, PausableUpgradeable,
         token.safeTransferFrom(safe, address(this), _amountToClaim);
         token.approve(address(strategyManager), _amountToClaim);
         shares = strategyManager.depositIntoStrategyWithSignature(
-            strategy, IStrategyToken(address(token)), _amountToClaim, msg.sender, _expiry, signature
+            strategy, IStrategyToken(address(token)), _amountToClaim, msg.sender, _expiry, _signature
         );
         amounts[msg.sender] -= _amountToClaim;
+
         // Call delegate on delegationManager
         strategyManager.delegation().delegateToBySignature(
             msg.sender,
-            operator,
-            stakerSignatureAndExpiry,
-            approverSignatureAndExpiry,
-            approverSalt
+            _operator,
+            _stakerSignatureAndExpiry,
+            _approverSignatureAndExpiry,
+            _approverSalt
         );
 
-        emit ClaimedAndRestakedAndDelegated(msg.sender, _amountToClaim, shares, operator);
+        emit ClaimedAndRestakedAndDelegated(msg.sender, _amountToClaim, shares, _operator);
     }
 }

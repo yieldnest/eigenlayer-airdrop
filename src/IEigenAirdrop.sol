@@ -4,6 +4,8 @@ pragma solidity >=0.8.25;
 import { IERC20 } from "@openzeppelin-v5.0.2/token/ERC20/IERC20.sol";
 import { IStrategy, IStrategyManager } from "eigenlayer-contracts/interfaces/IStrategyManager.sol";
 
+import { ISignatureUtils } from "eigenlayer-contracts/interfaces/ISignatureUtils.sol";
+
 /**
  * @title UserAmount
  * @dev Struct representing a user and their claimable token amount.
@@ -49,16 +51,39 @@ interface IEigenAirdrop {
     /**
      * @notice Claim tokens from the airdrop and restake them using a signature.
      * @param _amountToClaim Amount of tokens to claim.
-     * @param expiry The expiry time of the signature.
-     * @param signature The user's signature authorizing the restaking.
+     * @param _expiry The expiry time of the signature.
+     * @param _signature The user's signature authorizing the restaking.
      */
     function claimAndRestakeWithSignature(
         uint256 _amountToClaim,
-        uint256 expiry,
-        bytes calldata signature
+        uint256 _expiry,
+        bytes calldata _signature
     )
         external
         returns (uint256);
+
+    /**
+     * @notice Claims and restakes the specified amount of tokens using a signature and delegates to another address.
+     * @param _amountToClaim The amount of tokens to claim.
+     * @param _expiry The expiry time of the signature.
+     * @param _signature The user's signature authorizing the restaking.
+     * @param _operator The address to delegate the voting power to.
+     * @param _stakerSignatureAndExpiry The signature and expiry of the staker.
+     * @param _approverSignatureAndExpiry The signature and expiry of the approver.
+     * @param _approverSalt The salt used for the approver signature.
+     * @return shares The amount of shares received from restaking.
+     */
+    function claimAndRestakeWithSignatureAndDelegate(
+        uint256 _amountToClaim,
+        uint256 _expiry,
+        bytes calldata _signature,
+        address _operator,
+        ISignatureUtils.SignatureWithExpiry memory _stakerSignatureAndExpiry,
+        ISignatureUtils.SignatureWithExpiry memory _approverSignatureAndExpiry,
+        bytes32 _approverSalt
+    )
+        external
+        returns (uint256 shares);
 
     /**
      * @notice Pauses the contract, preventing claims.
@@ -110,10 +135,6 @@ interface IEigenAirdrop {
     /// @param amount The amount of tokens restaked.
     /// @param shares The amount of shares received from restaking.
     event ClaimedAndRestaked(address user, uint256 amount, uint256 shares);
-
-    /// @notice Emitted when the deadline is updated.
-    /// @param newDeadline The new deadline timestamp.
-    event DeadlineUpdated(uint256 newDeadline);
 
     /// @notice Emitted when a user claims, restakes tokens, and delegates.
     /// @param user The address of the user.

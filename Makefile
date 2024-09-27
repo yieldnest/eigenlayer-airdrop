@@ -73,7 +73,7 @@ convert:
 
 .PHONY: simulate
 simulate:
-	forge script DeployEigenAirdrop --sig "run(string memory)" ${json} --rpc-url ${network} --account ${deployerAccountName} --sender ${deployerAddress} --slow
+	forge script DeployEigenAirdrop --sig "run(string memory)" ${json} --rpc-url ${network}
 
 
 # make deploy json=script/inputs/ynETH.json network=mainnet
