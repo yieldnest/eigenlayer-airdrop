@@ -67,16 +67,24 @@ format:
 # make convert csv=script/input/ynETH.csv
 .PHONY: convert
 convert:
+	@if [ -z "${csv}" ]; then echo "Error: csv is required"; exit 1; fi
 	bash ./script/bash/convertCSVjson.sh ${csv}
 
 # make simulate json=script/inputs/ynETH.json network=mainnet
 
 .PHONY: simulate
 simulate:
+	@if [ -z "${network}" ]; then echo "Error: network is required"; exit 1; fi
+	@if [ -z "${json}" ]; then echo "Error: json is required"; exit 1; fi
+	@if [ -z "${deployerAccountName}" ]; then echo "Error: deployerAccountName is required"; exit 1; fi
+	@if [ -z "${deployerAddress}" ]; then echo "Error: deployerAddress is required"; exit 1; fi
 	forge script DeployEigenAirdrop --sig "run(string memory)" ${json} --rpc-url ${network} --account ${deployerAccountName} --sender ${deployerAddress} --slow
-
 
 # make deploy json=script/inputs/ynETH.json network=mainnet
 .PHONY: deploy
 deploy:
+	@if [ -z "${network}" ]; then echo "Error: network is required"; exit 1; fi
+	@if [ -z "${json}" ]; then echo "Error: json is required"; exit 1; fi
+	@if [ -z "${deployerAccountName}" ]; then echo "Error: deployerAccountName is required"; exit 1; fi
+	@if [ -z "${deployerAddress}" ]; then echo "Error: deployerAddress is required"; exit 1; fi
 	forge script DeployEigenAirdrop --sig "run(string memory)" ${json} --rpc-url ${network} --account ${deployerAccountName} --sender ${deployerAddress} --slow --broadcast --verify
