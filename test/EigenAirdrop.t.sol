@@ -466,7 +466,7 @@ contract EigenAirdropTest is BaseTest {
 
         // Check the balance of bEIGEN for the user is 0
         uint256 bEigenBalance = BEIGEN.balanceOf(staker);
-        assertEq(bEigenBalance, 0, "User's bEIGEN balance should equal the shares received");
+        assertEq(bEigenBalance, 0, "User's bEIGEN balance should be 0");
 
         // Check that the strategy shares for the user match the shares received
         uint256 userStrategyShares = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
