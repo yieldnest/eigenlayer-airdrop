@@ -27,6 +27,11 @@ contract DeployEigenAirdrop is BaseScript {
 
     function _deploy() internal {
         vm.startBroadcast();
+
+        address deployer = msg.sender;
+        console.log("Deployer address: ", deployer);
+
+
         eigenAirdropImpl = new EigenAirdrop();
 
         console.log("Deployed EigenAirdrop implementation at address: ", address(eigenAirdropImpl));
