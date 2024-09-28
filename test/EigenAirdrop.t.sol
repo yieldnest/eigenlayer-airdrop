@@ -464,6 +464,14 @@ contract EigenAirdropTest is BaseTest {
         uint256 sharesAfter = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
         assertEq(sharesAfter, sharesBefore + shares, "Shares After");
 
+        // Check the balance of bEIGEN for the user is 0
+        uint256 bEigenBalance = BEIGEN.balanceOf(staker);
+        assertEq(bEigenBalance, 0, "User's bEIGEN balance should equal the shares received");
+
+        // Check that the strategy shares for the user match the shares received
+        uint256 userStrategyShares = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
+        assertEq(userStrategyShares, shares, "User's strategy shares should equal the shares received");
+
         assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount, "YNSAFE Balance");
 
         // Assert that the staker is delegated to the specified operator

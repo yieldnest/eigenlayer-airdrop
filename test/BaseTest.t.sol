@@ -7,6 +7,8 @@ import { DelegationManager } from "eigenlayer-contracts/core/DelegationManager.s
 import { IStrategy } from "eigenlayer-contracts/interfaces/IStrategy.sol";
 import { Eigen } from "eigenlayer-contracts/token/Eigen.sol";
 import { Test } from "forge-std/Test.sol";
+import { BackingEigen } from "eigenlayer-contracts/token/BackingEigen.sol";
+
 
 contract BaseTest is Test {
     error RPCNotSet();
@@ -18,6 +20,8 @@ contract BaseTest is Test {
     DelegationManager internal constant DELEGATION_MANAGER = DelegationManager(0x39053D51B77DC0d36036Fc1fCc8Cb819df8Ef37A);
     IStrategy internal constant STRATEGY = IStrategy(0xaCB55C530Acdb2849e6d4f36992Cd8c9D50ED8F7);
     address OPERATOR = 0xa83e07353A9ED2aF88e7281a2fA7719c01356D8e;
+
+    BackingEigen internal constant BEIGEN = BackingEigen(0x83E9115d334D248Ce39a6f36144aEaB5b3456e75);
 
     uint256 internal constant INITIAL_BALANCE = 124_459_120_634_647_860_000_000;
 
