@@ -1,6 +1,4 @@
 
-@openzeppelin-upgrades/=lib/eigenlayer-contracts/lib/openzeppelin-contracts-upgradeable/
-
 eigenlayer-contracts/=lib/eigenlayer-contracts/src/contracts/
 forge-std/=lib/forge-std/src/
 
