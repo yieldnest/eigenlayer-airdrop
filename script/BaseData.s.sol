@@ -31,9 +31,11 @@ contract BaseData is Script {
         TEMP_AIRDROP_OWNER = makeAddr("airdrop-owner");
         TEMP_PROXY_CONTROLLER = makeAddr("proxy-controller");
 
+        address YN_DEV_MAINNET = 0xa08F39d30dc865CC11a49b6e5cBd27630D6141C3;
+
         __data[chainIds.mainnet] = Data({
-            airdropOwner: TEMP_AIRDROP_OWNER,
-            proxyAdmin: TEMP_PROXY_CONTROLLER,
+            airdropOwner: YN_DEV_MAINNET,
+            proxyAdmin: YN_DEV_MAINNET,
             rewardsSafe: 0xCCB2FEB7d8e081dcedFe1CFbefC9d46Eb383E389,
             eigenToken: 0xec53bF9167f50cDEB3Ae105f56099aaaB9061F83,
             bEigenToken: 0xec53bF9167f50cDEB3Ae105f56099aaaB9061F83,
@@ -41,9 +43,11 @@ contract BaseData is Script {
             strategy: 0xaCB55C530Acdb2849e6d4f36992Cd8c9D50ED8F7
         });
 
+        address YN_DEV_HOLESKY = 0x72fdBD51085bDa5eEEd3b55D1a46E2e92f0837a5;
+
         __data[chainIds.holesky] = Data({
-            airdropOwner: TEMP_AIRDROP_OWNER,
-            proxyAdmin: TEMP_PROXY_CONTROLLER,
+            airdropOwner: YN_DEV_HOLESKY,
+            proxyAdmin: YN_DEV_HOLESKY,
             rewardsSafe: 0x8BC702B8708d55F24Ec26ca8f151eC7a1B2A6441,
             eigenToken: 0x3B78576F7D6837500bA3De27A60c7f594934027E,
             bEigenToken: 0x275cCf9Be51f4a6C94aBa6114cdf2a4c45B9cb27,
@@ -57,6 +61,6 @@ contract BaseData is Script {
     }
 
     function isSupportedChainId(uint256 chainId) internal view returns (bool) {
-        return chainId == chainIds.mainnet;
+        return chainId == chainIds.mainnet || chainId == chainIds.holesky;
     }
 }
