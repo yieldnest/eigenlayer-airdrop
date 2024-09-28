@@ -70,7 +70,7 @@ convert:
 	@if [ -z "${csv}" ]; then echo "Error: csv is required"; exit 1; fi
 	bash ./script/bash/convertCSVjson.sh ${csv}
 
-# make simulate json=script/inputs/ynETH.json network=mainnet
+# make simulate json=script/inputs/season-one-eigen.json network=mainnet deployerAccountName=defaultKey deployerAddress=0x0000000000000000000000000000000000000000
 
 .PHONY: simulate
 simulate:
