@@ -1,0 +1,13 @@
+{
+  "eigenAirdropImplementation": "0x46D89982d3c76060454ACf43099eB86d388C0ac4",
+  "eigenAirdropProxy": "0xEedc5467f6cc6736f5A97722cc1c8382A32170c5",
+  "eigenToken": "0x3B78576F7D6837500bA3De27A60c7f594934027E",
+  "initialSafeBalance": 10000000000000000000,
+  "owner": "0x72fdBD51085bDa5eEEd3b55D1a46E2e92f0837a5",
+  "proxyAdmin": "0x72fdBD51085bDa5eEEd3b55D1a46E2e92f0837a5",
+  "rewardsSafe": "0x8BC702B8708d55F24Ec26ca8f151eC7a1B2A6441",
+  "strategy": "0x43252609bff8a13dFe5e057097f2f45A24387a84",
+  "strategyManager": "0xdfB5f6CE42aAA7830E94ECFCcAd411beF4d4D5b6",
+  "totalAmount": 2800000000000000000,
+  "totalPoints": 2800000000000000000
+}
