@@ -1,11 +1,8 @@
 
 @openzeppelin-upgrades/=lib/eigenlayer-contracts/lib/openzeppelin-contracts-upgradeable/
-@openzeppelin/=lib/eigenlayer-contracts/lib/openzeppelin-contracts/
 
 eigenlayer-contracts/=lib/eigenlayer-contracts/src/contracts/
 forge-std/=lib/forge-std/src/
-
-openzeppelin/=lib/eigenlayer-contracts/lib/openzeppelin-contracts-upgradeable-v4.9.0/contracts/
 
 @openzeppelin/contracts-upgradeable/=lib/eigenlayer-contracts/lib/openzeppelin-contracts-upgradeable/contracts/
 @openzeppelin/contracts/=lib/eigenlayer-contracts/lib/openzeppelin-contracts/contracts/
