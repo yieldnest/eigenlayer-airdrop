@@ -11,10 +11,12 @@ import { TransparentUpgradeableProxy } from
 import { OwnableUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/access/OwnableUpgradeable.sol";
 import { PausableUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/utils/PausableUpgradeable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import {ISignatureUtils} from "eigenlayer-contracts/interfaces/ISignatureUtils.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { Vm } from "forge-std/Vm.sol";
+
 
 import { Deposit, SigUtils } from "./utils/SigUtils.sol";
 
@@ -378,19 +380,49 @@ contract EigenAirdropTest is BaseTest {
 
         address OPERATOR_A41 = 0xa83e07353A9ED2aF88e7281a2fA7719c01356D8e;
 
+
+        ISignatureUtils.SignatureWithExpiry memory signatureWithExpiry;
+
+        {
+
+            address operator = OPERATOR_A41;
+            uint256 nonceBefore = DELEGATION_MANAGER.stakerNonce(staker);
+
+            uint256 expiry = block.timestamp + 1 days;
+
+            bytes32 structHash = keccak256(
+                abi.encode(DELEGATION_MANAGER.STAKER_DELEGATION_TYPEHASH(), staker, operator, nonceBefore, expiry)
+            );
+            bytes32 digestHash = keccak256(abi.encodePacked("\x19\x01", DELEGATION_MANAGER.domainSeparator(), structHash));
+
+            bytes memory signature;
+            {
+                (uint8 v, bytes32 r, bytes32 s) = vm.sign(stakerWallet, digestHash);
+                signature = abi.encodePacked(r, s, v);
+            }
+
+            assertGt(expiry, block.timestamp, "Expiry should be in the future");
+            signatureWithExpiry = ISignatureUtils.SignatureWithExpiry({
+                signature: signature,
+                expiry: expiry
+            });
+            
+        }
+        
+
         vm.prank(staker);
-        // uint256 shares = airdrop.claimAndRestakeWithSignatureAndDelegate(amount, deposit.expiry, signature, OPERATOR_A41);
+        uint256 shares = airdrop.claimAndRestakeWithSignatureAndDelegate(amount, deposit.expiry, signature, OPERATOR_A41, signatureWithExpiry);
 
-        // assertEq(EIGEN.balanceOf(staker), 0, "User Balance");
-        // assertEq(shares, amount, "Shares");
+        assertEq(EIGEN.balanceOf(staker), 0, "User Balance");
+        assertEq(shares, amount, "Shares");
 
-        // uint256 sharesAfter = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
-        // assertEq(sharesAfter, sharesBefore + shares, "Shares After");
+        uint256 sharesAfter = STRATEGY_MANAGER.stakerStrategyShares(staker, STRATEGY);
+        assertEq(sharesAfter, sharesBefore + shares, "Shares After");
 
-        // assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount, "YNSAFE Balance");
+        assertEq(EIGEN.balanceOf(YNSAFE), INITIAL_BALANCE - amount, "YNSAFE Balance");
 
-        // // Assert that the staker is delegated to the specified operator
-        // address delegatedOperator = STRATEGY_MANAGER.delegation().delegatedTo(staker);
-        // assertEq(delegatedOperator, OPERATOR_A41, "Staker should be delegated to the specified operator");
+        // Assert that the staker is delegated to the specified operator
+        address delegatedOperator = STRATEGY_MANAGER.delegation().delegatedTo(staker);
+        assertEq(delegatedOperator, OPERATOR_A41, "Staker should be delegated to the specified operator");
     }
 }
