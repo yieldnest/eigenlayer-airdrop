@@ -1,6 +1,5 @@
 # Default values
-csv ?= script/inputs/ynETH.csv
-json ?= script/inputs/ynETH.json
+json ?= script/inputs/season-one-eigen.json
 network ?= mainnet
 deployerAccountName := $(shell grep '^DEPLOYER_ACCOUNT_NAME=' .env | cut -d '=' -f2)
 deployerAddress := $(shell grep '^DEPLOYER_ADDRESS=' .env | cut -d '=' -f2)
@@ -70,7 +69,7 @@ convert:
 	@if [ -z "${csv}" ]; then echo "Error: csv is required"; exit 1; fi
 	bash ./script/bash/convertCSVjson.sh ${csv}
 
-# make simulate json=script/inputs/season-one-eigen.json network=mainnet deployerAccountName=defaultKey deployerAddress=0x0000000000000000000000000000000000000000
+# make simulate json=script/inputs/season-one-eigen.json network=mainnet
 
 .PHONY: simulate
 simulate:
@@ -80,7 +79,7 @@ simulate:
 	@if [ -z "${deployerAddress}" ]; then echo "Error: deployerAddress is required"; exit 1; fi
 	forge script DeployEigenAirdrop --sig "run(string memory)" ${json} --rpc-url ${network} --account ${deployerAccountName} --sender ${deployerAddress} --slow
 
-# make deploy json=script/inputs/ynETH.json network=mainnet
+# make deploy json=script/inputs/season-one-eigen.json network=mainnet
 .PHONY: deploy
 deploy:
 	@if [ -z "${network}" ]; then echo "Error: network is required"; exit 1; fi

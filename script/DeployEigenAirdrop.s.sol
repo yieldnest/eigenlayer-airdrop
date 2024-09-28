@@ -4,8 +4,10 @@ pragma solidity >=0.8.25 <0.9.0;
 import { EigenAirdrop, IEigenAirdrop, UserAmount } from "../src/EigenAirdrop.sol";
 
 import { BaseScript } from "./BaseScript.s.sol";
+
+import { ProxyAdmin } from "@openzeppelin-v5.0.2/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from
-    "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+    "@openzeppelin-v5.0.2/proxy/transparent/TransparentUpgradeableProxy.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -14,6 +16,7 @@ import { console } from "forge-std/console.sol";
 contract DeployEigenAirdrop is BaseScript {
     EigenAirdrop public eigenAirdrop;
     EigenAirdrop public eigenAirdropImpl;
+    ProxyAdmin public proxyAdmin;
 
     error InvalidDeployment();
 
@@ -30,7 +33,6 @@ contract DeployEigenAirdrop is BaseScript {
 
         address deployer = msg.sender;
         console.log("Deployer address: ", deployer);
-
 
         eigenAirdropImpl = new EigenAirdrop();
 
@@ -50,9 +52,16 @@ contract DeployEigenAirdrop is BaseScript {
         console.log("Initialized EigenAirdrop with owner: ", data.airdropOwner);
 
         vm.stopBroadcast();
+
+        bytes32 ADMIN_STORAGE_SLOT = 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
+        bytes32 value = vm.load(address(proxy), ADMIN_STORAGE_SLOT);
+        proxyAdmin = ProxyAdmin(address(uint160(uint256(value))));
     }
 
     function _verify() internal view {
+        if (proxyAdmin.owner() != data.proxyAdmin) {
+            revert InvalidDeployment();
+        }
         if (eigenAirdrop.owner() != data.airdropOwner) {
             revert InvalidDeployment();
         }
@@ -72,7 +81,8 @@ contract DeployEigenAirdrop is BaseScript {
         vm.serializeAddress(json, "eigenAirdropProxy", address(eigenAirdrop));
         vm.serializeAddress(json, "eigenAirdropImplementation", address(eigenAirdropImpl));
         vm.serializeAddress(json, "owner", data.airdropOwner);
-        vm.serializeAddress(json, "proxyAdmin", data.proxyAdmin);
+        vm.serializeAddress(json, "proxyAdmin", address(proxyAdmin));
+        vm.serializeAddress(json, "proxyAdminOwner", data.proxyAdmin);
         vm.serializeAddress(json, "rewardsSafe", data.rewardsSafe);
         vm.serializeAddress(json, "eigenToken", data.eigenToken);
         vm.serializeAddress(json, "strategy", data.strategy);

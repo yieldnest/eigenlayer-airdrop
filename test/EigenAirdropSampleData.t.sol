@@ -6,7 +6,7 @@ import { IEigenAirdrop, UserAmount } from "../src/IEigenAirdrop.sol";
 
 import { BaseTest } from "./BaseTest.t.sol";
 import { TransparentUpgradeableProxy } from
-    "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+    "@openzeppelin-v5.0.2/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import { OwnableUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/access/OwnableUpgradeable.sol";
 import { PausableUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/utils/PausableUpgradeable.sol";

@@ -5,20 +5,21 @@ import { EigenAirdrop } from "../src/EigenAirdrop.sol";
 import { IEigenAirdrop, UserAmount } from "../src/IEigenAirdrop.sol";
 
 import { BaseTest } from "./BaseTest.t.sol";
+
+import { ProxyAdmin } from "@openzeppelin-v5.0.2/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from
-    "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+    "@openzeppelin-v5.0.2/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import { OwnableUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/access/OwnableUpgradeable.sol";
 import { PausableUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/utils/PausableUpgradeable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import {ISignatureUtils} from "eigenlayer-contracts/interfaces/ISignatureUtils.sol";
+import { ISignatureUtils } from "eigenlayer-contracts/interfaces/ISignatureUtils.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { ISignatureUtils } from "eigenlayer-contracts/interfaces/ISignatureUtils.sol";
 
 import { Vm } from "forge-std/Vm.sol";
-
 
 import { Deposit, SigUtils } from "./utils/SigUtils.sol";
 
@@ -67,10 +68,12 @@ contract EigenAirdropTest is BaseTest {
         strategyWhitelister = STRATEGY_MANAGER.strategyWhitelister();
     }
 
-    function testDefaults() public {
-        vm.prank(proxyAdmin);
-        assertEq(address(proxy.admin()), proxyAdmin);
+    function testDefaults() public view {
+        bytes32 ADMIN_STORAGE_SLOT = 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
+        bytes32 value = vm.load(address(proxy), ADMIN_STORAGE_SLOT);
+        ProxyAdmin proxyAdminContract = ProxyAdmin(address(uint160(uint256(value))));
 
+        assertEq(address(proxyAdminContract.owner()), proxyAdmin);
         assertEq(address(airdrop.safe()), address(YNSAFE));
         assertEq(address(airdrop.token()), address(EIGEN));
         assertEq(address(airdrop.strategy()), address(STRATEGY));
@@ -417,46 +420,29 @@ contract EigenAirdropTest is BaseTest {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(stakerWallet, depositDigest);
         bytes memory depositSignature = abi.encodePacked(r, s, v);
 
-        bytes32 currentStakerDelegationDigestHash =
-            STRATEGY_MANAGER.delegation().calculateCurrentStakerDelegationDigestHash(staker, OPERATOR, expiry);
-
-        (v, r, s) = vm.sign(stakerWallet, currentStakerDelegationDigestHash);
-
-        ISignatureUtils.SignatureWithExpiry memory stakerSignatureWithExpiry =
-            ISignatureUtils.SignatureWithExpiry({ expiry: expiry, signature: abi.encodePacked(r, s, v) });
-
-
         ISignatureUtils.SignatureWithExpiry memory signatureWithExpiry;
 
         {
-
             address operator = OPERATOR;
             uint256 nonceBefore = DELEGATION_MANAGER.stakerNonce(staker);
-
-            uint256 expiry = block.timestamp + 1 days;
 
             bytes32 structHash = keccak256(
                 abi.encode(DELEGATION_MANAGER.STAKER_DELEGATION_TYPEHASH(), staker, operator, nonceBefore, expiry)
             );
-            bytes32 digestHash = keccak256(abi.encodePacked("\x19\x01", DELEGATION_MANAGER.domainSeparator(), structHash));
+            bytes32 digestHash =
+                keccak256(abi.encodePacked("\x19\x01", DELEGATION_MANAGER.domainSeparator(), structHash));
 
-            bytes memory signature;
-            {
-                (uint8 v, bytes32 r, bytes32 s) = vm.sign(stakerWallet, digestHash);
-                signature = abi.encodePacked(r, s, v);
-            }
+            (v, r, s) = vm.sign(stakerWallet, digestHash);
+            bytes memory signature = abi.encodePacked(r, s, v);
 
             assertGt(expiry, block.timestamp, "Expiry should be in the future");
-            signatureWithExpiry = ISignatureUtils.SignatureWithExpiry({
-                signature: signature,
-                expiry: expiry
-            });
-
+            signatureWithExpiry = ISignatureUtils.SignatureWithExpiry({ signature: signature, expiry: expiry });
         }
 
-
         vm.prank(staker);
-        uint256 shares = airdrop.claimAndRestakeWithSignatureAndDelegate(amount, deposit.expiry, depositSignature, OPERATOR, signatureWithExpiry);
+        uint256 shares = airdrop.claimAndRestakeWithSignatureAndDelegate(
+            amount, expiry, depositSignature, OPERATOR, signatureWithExpiry
+        );
 
         assertEq(EIGEN.balanceOf(staker), 0, "User Balance");
         assertEq(shares, amount, "Shares");
