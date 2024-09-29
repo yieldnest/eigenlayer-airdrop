@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.25;
 
-import { OwnableUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/access/OwnableUpgradeable.sol";
-import { PausableUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/utils/PausableUpgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/utils/ReentrancyGuardUpgradeable.sol";
-import { IERC20 } from "@openzeppelin-v5.0.2/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin-v5.0.2/token/ERC20/utils/SafeERC20.sol";
-import { Math } from "@openzeppelin-v5.0.2/utils/math/Math.sol";
+import { OwnableUpgradeable } from "@openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { PausableUpgradeable } from "@openzeppelin-contracts-upgradeable/utils/PausableUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin-contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import { IERC20 } from "@openzeppelin-contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
+import { Math } from "@openzeppelin-contracts/utils/math/Math.sol";
 
 import { ISignatureUtils } from "eigenlayer-contracts/interfaces/ISignatureUtils.sol";
 import {

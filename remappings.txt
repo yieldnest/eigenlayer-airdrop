@@ -3,5 +3,5 @@ eigenlayer-contracts/=lib/eigenlayer-contracts/src/contracts/
 @openzeppelin/contracts-upgradeable/=lib/eigenlayer-contracts/lib/openzeppelin-contracts-upgradeable/contracts/
 @openzeppelin/contracts/=lib/eigenlayer-contracts/lib/openzeppelin-contracts/contracts/
 
-@openzeppelin-upgradeable-v5.0.2/=lib/openzeppelin-contracts-upgradeable/contracts/
-@openzeppelin-v5.0.2/=lib/openzeppelin-contracts/contracts/
+@openzeppelin-contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
+@openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/

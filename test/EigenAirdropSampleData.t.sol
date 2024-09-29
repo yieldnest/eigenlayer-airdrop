@@ -6,13 +6,13 @@ import { IEigenAirdrop, UserAmount } from "../src/IEigenAirdrop.sol";
 
 import { BaseTest } from "./BaseTest.t.sol";
 import { TransparentUpgradeableProxy } from
-    "@openzeppelin-v5.0.2/proxy/transparent/TransparentUpgradeableProxy.sol";
+    "@openzeppelin-contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import { OwnableUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/access/OwnableUpgradeable.sol";
-import { PausableUpgradeable } from "@openzeppelin-upgradeable-v5.0.2/utils/PausableUpgradeable.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { OwnableUpgradeable } from "@openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { PausableUpgradeable } from "@openzeppelin-contracts-upgradeable/utils/PausableUpgradeable.sol";
+import { Math } from "@openzeppelin-contracts/utils/math/Math.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20 } from "@openzeppelin-contracts/token/ERC20/IERC20.sol";
 
 import { Vm } from "forge-std/Vm.sol";
 
