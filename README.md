@@ -151,7 +151,9 @@ Run for holesky:
 
 ```forge script script/VerifyDeployment.s.sol  --rpc-url  https://rpc.ankr.com/eth_holesky --sig "run(string memory)" script/inputs/season-one-eigen-holesky.json```
 
-Run equivalent for mainnet.
+Run equivalent for mainnet:
+
+```forge script script/VerifyDeployment.s.sol  --rpc-url [your own rpc]  --sig "run(string memory)" script/inputs/season-one-eigen.json```
 
 ## Example JSON Input File
 
