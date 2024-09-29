@@ -7,13 +7,14 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { console } from "forge-std/console.sol";
 
 import { UserAmount } from "../src/IEigenAirdrop.sol";
+import { Utils } from "./Utils.sol";
 
 struct EigenTokens {
     address addr;
     uint256 tokens;
 }
 
-contract BaseScript is BaseData {
+contract BaseScript is BaseData, Utils {
     Data public data;
     uint256 public initialSafeBalance;
 
