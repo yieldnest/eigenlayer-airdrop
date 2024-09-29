@@ -145,6 +145,14 @@ To deploy the `EigenAirdrop` contract, use the provided Makefile. This project s
 
 The Makefile automates many aspects of the deployment, allowing you to easily convert input data and deploy the contract.
 
+## Deployment verification
+
+Run for holesky:
+
+```forge script script/VerifyDeployment.s.sol  --rpc-url  https://rpc.ankr.com/eth_holesky --sig "run(string memory)" script/inputs/season-one-eigen-holesky.json```
+
+Run equivalent for mainnet.
+
 ## Example JSON Input File
 
 Below is an example structure for the JSON input file used for the airdrop:
