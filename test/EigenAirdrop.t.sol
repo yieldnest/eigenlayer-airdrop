@@ -6,13 +6,13 @@ import { IEigenAirdrop, UserAmount } from "../src/IEigenAirdrop.sol";
 
 import { BaseTest } from "./BaseTest.t.sol";
 
-import { ProxyAdmin } from "@openzeppelin-contracts/proxy/transparent/ProxyAdmin.sol";
+import { ProxyAdmin } from "lib/openzeppelin-contracts/contracts/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from
-    "@openzeppelin-contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+    "lib/openzeppelin-contracts/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import { OwnableUpgradeable } from "@openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { PausableUpgradeable } from "@openzeppelin-contracts-upgradeable/utils/PausableUpgradeable.sol";
-import { Math } from "@openzeppelin-contracts/utils/math/Math.sol";
+import { OwnableUpgradeable } from "lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
+import { PausableUpgradeable } from "lib/openzeppelin-contracts-upgradeable/contracts/utils/PausableUpgradeable.sol";
+import { Math } from "lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { ISignatureUtils } from "eigenlayer-contracts/interfaces/ISignatureUtils.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";

@@ -5,11 +5,11 @@ import { EigenAirdrop, IEigenAirdrop, UserAmount } from "../src/EigenAirdrop.sol
 
 import { BaseScript } from "./BaseScript.s.sol";
 
-import { ProxyAdmin } from "@openzeppelin-contracts/proxy/transparent/ProxyAdmin.sol";
+import { ProxyAdmin } from "lib/openzeppelin-contracts/contracts/proxy/transparent/ProxyAdmin.sol";
 import { TransparentUpgradeableProxy } from
-    "@openzeppelin-contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import { Address } from "@openzeppelin-contracts/utils/Address.sol";
-import { Strings } from "@openzeppelin-contracts/utils/Strings.sol";
+    "lib/openzeppelin-contracts/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { Address } from "lib/openzeppelin-contracts/contracts/utils/Address.sol";
+import { Strings } from "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 
 import { console } from "forge-std/console.sol";
 
